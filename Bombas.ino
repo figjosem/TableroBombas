@@ -1,3 +1,5 @@
+// v7.05 
+
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>

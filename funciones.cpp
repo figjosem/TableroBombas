@@ -42,6 +42,8 @@ void processCommand(String command, String chat_id) {
       processWriteCommand(argument, chat_id);
     } else if (action == "/read") {
       processReadCommand(argument, chat_id);
+    } else if (action == "/bomba") {
+      processReadCommand(argument, chat_id);
     } else if (action == "/update") {
       lastUpdateId = updateId;
       saveLastUpdateId(lastUpdateId);
@@ -71,6 +73,12 @@ void processWriteCommand(String argument, String chat_id) {
 void processReadCommand(String argument, String chat_id) {
   int modbusAddress = argument.toInt();
   leerDatoModbus(modbusAddress, chat_id);
+}
+
+void processBombaCommand(String argument, String chat_id) {
+  int slaveID = argument.toInt();
+  //leerDatoModbus(modbusAddress, chat_id);
+  node.begin(slaveID, Serial1);  // Slave ID 1
 }
 
 void processUpdateCommand(String url, String chat_id) {
