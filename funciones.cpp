@@ -42,9 +42,13 @@ void processCommand(String command, String chat_id) {
       processWriteCommand(argument, chat_id);
     } else if (action == "/version") {
       processBombaCommand("99", chat_id);
-    } else if (action == "/read") {
-      processBombaCommand(argument, chat_id);
     } else if (action == "/bomba") {
+      if (argument.toInt() > 3 or argument.toInt() < 1) {
+      bot.sendMessage(chat_id, "Error: valor fuera de rango.", "");  
+      } else {
+      processBombaCommand(argument, chat_id);}
+      
+    } else if (action == "/read") {
       processReadCommand(argument, chat_id);
     } else if (action == "/update") {
       lastUpdateId = updateId;
