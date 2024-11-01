@@ -1,6 +1,8 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
 
+#define VERSION "7.06" 
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>

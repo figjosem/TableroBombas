@@ -40,8 +40,10 @@ void processCommand(String command, String chat_id) {
 
     if (action == "/write") {
       processWriteCommand(argument, chat_id);
+    } else if (action == "/version") {
+      processBombaCommand("99", chat_id);
     } else if (action == "/read") {
-      processReadCommand(argument, chat_id);
+      processBombaCommand(argument, chat_id);
     } else if (action == "/bomba") {
       processReadCommand(argument, chat_id);
     } else if (action == "/update") {
@@ -77,8 +79,13 @@ void processReadCommand(String argument, String chat_id) {
 
 void processBombaCommand(String argument, String chat_id) {
   int slaveID = argument.toInt();
+  if (slaveID == 99) {
+    bot.sendMessage(chat_id, "Version " + String(VERSION) + "." , "");
+    } else {
   //leerDatoModbus(modbusAddress, chat_id);
   node.begin(slaveID, Serial1);  // Slave ID 1
+   bot.sendMessage(chat_id, "Comando recibido. Bomba " + argument + " activa." , "");
+    }
 }
 
 void processUpdateCommand(String url, String chat_id) {
