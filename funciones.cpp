@@ -34,6 +34,19 @@ void processCommand(String command, String chat_id) {
 
   int spaceIndex = command.indexOf(' ');
   
+  // Verificar si el comando es "/version" sin parámetros
+  if (command == "/version") {
+    processBombaCommand("99", chat_id);
+    return; // Terminar la función para evitar el mensaje de error
+  }
+  if (command == "/update") {
+    lastUpdateId = updateId;
+      saveLastUpdateId(lastUpdateId);
+      delay(5); 
+      processUpdateCommand("https://raw.githubusercontent.com/figjosem/TableroBombas/refs/heads/main/bin/Bombas.bin", chat_id);
+    return; // Terminar la función para evitar el mensaje de error
+  }
+
   if (spaceIndex != -1) {
     String action = command.substring(0, spaceIndex);
     String argument = command.substring(spaceIndex + 1);
@@ -41,7 +54,7 @@ void processCommand(String command, String chat_id) {
     if (action == "/write") {
       processWriteCommand(argument, chat_id);
     } else if (action == "/version") {
-      processBombaCommand("99", chat_id);
+      processBombaCommand("2", chat_id);
     } else if (action == "/bomba") {
       if (argument.toInt() > 3 or argument.toInt() < 1) {
       bot.sendMessage(chat_id, "Error: valor fuera de rango.", "");  
