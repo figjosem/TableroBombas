@@ -1,7 +1,7 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
 
-#define VERSION "7.07" 
+#define VERSION "7.08" 
 
 #include <Arduino.h>
 #include <WiFi.h>
