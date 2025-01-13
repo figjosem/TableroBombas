@@ -20,3 +20,7 @@ const int updateDelay = 10000;
 uint32_t lastUpdateId = 0;
 uint32_t updateId;
 bool restart = false;
+uint8_t salida_595[3] = {0, 0, 0}; // Inicializa salidas en 0
+uint8_t entrada_165 = 0;           // Inicializa entradas en 0
+
+bool wifiConnected = false;

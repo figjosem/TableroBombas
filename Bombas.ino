@@ -1,5 +1,3 @@
-
-
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
@@ -42,6 +40,13 @@ void setup() {
 }
 
 void loop() {
+  // Controlar LED de estado Wi-Fi
+  controlarLedWiFi();
+
+  // Leer entradas
+  leerEntradas();
+
+  // Procesar mensajes de Telegram
   int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
   while (numNewMessages) {
     handleNewMessages(numNewMessages);
@@ -51,4 +56,6 @@ void loop() {
       ESP.restart();
     }
   }
+  // Actualizar salidas
+  actualizarSalidas();
 }

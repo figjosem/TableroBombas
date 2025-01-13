@@ -9,6 +9,64 @@ void postTransmission() {
   digitalWrite(RE_PIN, LOW);
 }
 
+// Inicializar pines y configurar 74HC595 y 74HC165
+void inicializarEntradasSalidas() {
+  pinMode(DATA_595, OUTPUT);
+  pinMode(LATCH_595, OUTPUT);
+  pinMode(CLOCK_595, OUTPUT);
+  pinMode(OE_595, OUTPUT);
+
+  pinMode(DATA_165, INPUT);
+  pinMode(LOAD_165, OUTPUT);
+  pinMode(CLOCK_165, OUTPUT);
+
+  pinMode(LED_STATUS, OUTPUT);
+
+  digitalWrite(OE_595, LOW); // Habilitar salidas del 74HC595
+  digitalWrite(LATCH_595, LOW);
+  digitalWrite(LOAD_165, HIGH);
+}
+
+// Actualizar los valores de las salidas usando el 74HC595
+void actualizarSalidas() {
+  digitalWrite(LATCH_595, LOW);
+  for (int i = 2; i >= 0; i--) {
+    shiftOut(DATA_595, CLOCK_595, MSBFIRST, salida_595[i]);
+  }
+  digitalWrite(LATCH_595, HIGH);
+}
+
+// Leer los valores de las entradas usando el 74HC165
+void leerEntradas() {
+  digitalWrite(LOAD_165, LOW);
+  delayMicroseconds(5);
+  digitalWrite(LOAD_165, HIGH);
+
+  entrada_165 = 0;
+  for (int i = 0; i < 8; i++) {
+    entrada_165 |= (digitalRead(DATA_165) << (7 - i));
+    digitalWrite(CLOCK_165, HIGH);
+    delayMicroseconds(5);
+    digitalWrite(CLOCK_165, LOW);
+  }
+}
+
+// Controlar el LED de estado de conexión Wi-Fi
+void controlarLedWiFi() {
+  static unsigned long lastMillis = 0;
+  static bool ledState = false;
+
+  unsigned long currentMillis = millis();
+  int intervalo = WiFi.status() == WL_CONNECTED ? 250 : 500; // Rápido si conectado, lento si no
+
+  if (currentMillis - lastMillis >= intervalo) {
+    lastMillis = currentMillis;
+    ledState = !ledState;
+    digitalWrite(LED_STATUS, ledState);
+  }
+}
+
+
 void handleNewMessages(int numNewMessages) {
   for (int i = 0; i < numNewMessages; i++) {
     updateId = bot.messages[i].update_id;
@@ -53,8 +111,6 @@ void processCommand(String command, String chat_id) {
 
     if (action == "/write") {
       processWriteCommand(argument, chat_id);
-    } else if (action == "/version") {
-      processBombaCommand("2", chat_id);
     } else if (action == "/bomba") {
       if (argument.toInt() > 3 or argument.toInt() < 1) {
       bot.sendMessage(chat_id, "Error: valor fuera de rango.", "");  

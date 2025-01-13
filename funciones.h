@@ -3,6 +3,16 @@
 
 #include <Arduino.h>
 
+// Funciones de entradas y salidas
+void init595();
+void write595(uint16_t data);
+void init165();
+uint16_t read165();
+
+// Funciones de control de LED
+void updateLedStatus(bool wifiConnected);
+
+// Funciones principales
 void preTransmission();
 void postTransmission();
 void handleNewMessages(int numNewMessages);
@@ -16,5 +26,9 @@ void leerDatoModbus(uint16_t registro, String chat_id);
 void updateFirmware(String url, String chat_id);
 void saveLastUpdateId(uint32_t uId);
 uint32_t loadLastUpdateId();
+void inicializarEntradasSalidas();
+void actualizarSalidas();
+void leerEntradas();
+void controlarLedWiFi();
 
 #endif
