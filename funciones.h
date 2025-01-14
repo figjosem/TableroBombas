@@ -26,6 +26,7 @@ void leerDatoModbus(uint16_t registro, String chat_id);
 void updateFirmware(String url, String chat_id);
 void saveLastUpdateId(uint32_t uId);
 uint32_t loadLastUpdateId();
+
 void inicializarEntradasSalidas();
 void actualizarSalidas();
 void leerEntradas();
