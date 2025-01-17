@@ -196,7 +196,7 @@ void processBombaCommand(String argument, String chat_id) {
   if (slaveID == 99) {
     bot.sendMessage(chat_id, "Version " + String(VERSION) + "." , "");
     } else if (slaveID == 98) {
-    bot.sendMessage(chat_id, "Entradas: " + String(entrada_165) + "." , ""); 
+    bot.sendMessage(chat_id, "Entradas: " + String(entrada_165, BIN) + "." , ""); 
   } else {
   //leerDatoModbus(modbusAddress, chat_id);
   node.begin(slaveID, Serial1);  // Slave ID 1

@@ -28,7 +28,7 @@
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12" 
+#define VERSION "7.12.0"
 
 extern const char* ssid;
 extern const char* password;
@@ -37,6 +37,8 @@ extern IPAddress gateway;
 extern IPAddress subnet;
 extern IPAddress primaryDNS;
 extern IPAddress secondaryDNS;
+
+extern unsigned long lastUpdateTime ; // Variable para controlar el tiempo
 
 
 extern const String BOTtoken;

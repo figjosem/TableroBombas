@@ -43,9 +43,22 @@ void loop() {
   // Controlar LED de estado Wi-Fi
   controlarLedWiFi();
 
-  // Leer entradas
-  leerEntradas();
-  salida_595 |= entrada_165 << 16;
+  // Obtener el tiempo actual
+  unsigned long currentTime = millis();
+
+  // Actualizar entradas y salidas cada 200 ms
+  if (currentTime - lastUpdateTime >= 200) { // Cambia 200 a 500 si deseas un intervalo mayor
+    lastUpdateTime = currentTime; // Actualiza el tiempo de la última ejecución
+
+    // Leer entradas
+    leerEntradas();
+    entrada_165 = 14;
+    salida_595 |= entrada_165 << 16;
+
+    // Actualizar salidas
+    actualizarSalidas(salida_595);
+  }
+
   // Procesar mensajes de Telegram
   int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
   while (numNewMessages) {
@@ -56,6 +69,4 @@ void loop() {
       ESP.restart();
     }
   }
-  // Actualizar salidas
-  actualizarSalidas(salida_595);
 }
