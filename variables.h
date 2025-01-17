@@ -19,6 +19,7 @@
 #define DATA_165 5
 #define LOAD_165 16
 #define CLOCK_165 17
+
 #define RE_PIN 22
 #define TX_PIN 1
 #define RX_PIN 3
@@ -27,7 +28,7 @@
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.10" 
+#define VERSION "7.12" 
 
 extern const char* ssid;
 extern const char* password;
