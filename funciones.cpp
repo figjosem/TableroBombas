@@ -134,6 +134,10 @@ void processCommand(String command, String chat_id) {
     processBombaCommand("99", chat_id);
     return; // Terminar la función para evitar el mensaje de error
   }
+  if (command == "/entradas") {
+    processBombaCommand("98", chat_id);
+    return; // Terminar la función para evitar el mensaje de error
+  }
   if (command == "/update") {
     lastUpdateId = updateId;
       saveLastUpdateId(lastUpdateId);
@@ -191,7 +195,9 @@ void processBombaCommand(String argument, String chat_id) {
   int slaveID = argument.toInt();
   if (slaveID == 99) {
     bot.sendMessage(chat_id, "Version " + String(VERSION) + "." , "");
-    } else {
+    } else if (slaveID == 98) {
+    bot.sendMessage(chat_id, "Entradas: " + String(entrada_165) + "." , ""); 
+  } else {
   //leerDatoModbus(modbusAddress, chat_id);
   node.begin(slaveID, Serial1);  // Slave ID 1
    bot.sendMessage(chat_id, "Comando recibido. Bomba " + argument + " activa." , "");
