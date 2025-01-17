@@ -25,7 +25,7 @@ void setup() {
   Serial.println("\nConectado a WiFi con IP: " + WiFi.localIP().toString());
 
   client.setInsecure();
-
+  inicializarEntradasSalidas();
   pinMode(RE_PIN, OUTPUT);
   Serial1.begin(19200, SERIAL_8N1, RX_PIN, TX_PIN);
   
@@ -52,7 +52,6 @@ void loop() {
 
     // Leer entradas
     leerEntradas();
-    entrada_165 = 14;
     salida_595 |= entrada_165 << 16;
 
     // Actualizar salidas
