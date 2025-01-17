@@ -27,7 +27,7 @@
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.09" 
+#define VERSION "7.10" 
 
 extern const char* ssid;
 extern const char* password;
@@ -48,7 +48,7 @@ extern const int updateDelay;
 extern uint32_t lastUpdateId;
 extern uint32_t updateId;
 extern bool restart;
-extern uint8_t salida_595[3]; // Para almacenar los estados de salida
+extern uint32_t salida_595; // Para almacenar los estados de salida
 extern uint8_t entrada_165;   // Para almacenar el estado leído de las entradas
 
 extern bool wifiConnected;

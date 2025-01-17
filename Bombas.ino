@@ -45,7 +45,7 @@ void loop() {
 
   // Leer entradas
   leerEntradas();
-
+  salida_595 |= entrada_165 << 16;
   // Procesar mensajes de Telegram
   int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
   while (numNewMessages) {
@@ -57,5 +57,5 @@ void loop() {
     }
   }
   // Actualizar salidas
-  actualizarSalidas();
+  actualizarSalidas(salida_595);
 }

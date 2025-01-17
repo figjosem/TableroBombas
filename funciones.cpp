@@ -27,6 +27,19 @@ void inicializarEntradasSalidas() {
   digitalWrite(LOAD_165, HIGH);
 }
 
+//========================
+void actualizarSalidas(uint32_t datas) {
+  digitalWrite(LATCH_595, LOW);
+  for (int i = 0; i < 24; i++) {
+    digitalWrite(DATA_595, (datas & (1 << (23 - i))) ? HIGH : LOW);
+    digitalWrite(CLOCK_595, HIGH);
+    delayMicroseconds(1);
+    digitalWrite(CLOCK_595, LOW);
+    delayMicroseconds(1);
+  }
+  digitalWrite(LATCH_595, HIGH);
+}
+/*
 // Actualizar los valores de las salidas usando el 74HC595
 void actualizarSalidas() {
   digitalWrite(LATCH_595, LOW);
@@ -35,7 +48,29 @@ void actualizarSalidas() {
   }
   digitalWrite(LATCH_595, HIGH);
 }
+*/
+//=========================
+//=========================
+void leerEntradas() {
+  byte result = 0;
+  digitalWrite(LOAD_165, LOW);
+  delayMicroseconds(1);
+  digitalWrite(LOAD_165, HIGH);
 
+  for (int i = 0; i < 8; i++) {
+    result <<= 1;
+    if (!digitalRead(DATA_165)) {
+      result |= 1;
+    }
+    digitalWrite(CLOCK_165, HIGH);
+    delayMicroseconds(1);
+    digitalWrite(CLOCK_165, LOW);
+    delayMicroseconds(1);
+  }
+  entrada_165 = result;
+  //return result;
+}
+/*
 // Leer los valores de las entradas usando el 74HC165
 void leerEntradas() {
   digitalWrite(LOAD_165, LOW);
@@ -50,6 +85,8 @@ void leerEntradas() {
     digitalWrite(CLOCK_165, LOW);
   }
 }
+*/
+//=========================
 
 // Controlar el LED de estado de conexión Wi-Fi
 void controlarLedWiFi() {

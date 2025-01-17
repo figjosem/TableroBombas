@@ -28,7 +28,7 @@ void saveLastUpdateId(uint32_t uId);
 uint32_t loadLastUpdateId();
 
 void inicializarEntradasSalidas();
-void actualizarSalidas();
+void actualizarSalidas(uint32_t datas);
 void leerEntradas();
 void controlarLedWiFi();
 
