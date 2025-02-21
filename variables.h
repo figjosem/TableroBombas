@@ -28,7 +28,7 @@
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12.1"
+#define VERSION "7.12.2"
 
 extern const char* ssid;
 extern const char* password;
@@ -39,12 +39,17 @@ extern IPAddress primaryDNS;
 extern IPAddress secondaryDNS;
 
 extern unsigned long lastUpdateTime ; // Variable para controlar el tiempo
-
+extern unsigned long inicioEstado ;
+extern unsigned long tiempoActual ;
 
 extern const String BOTtoken;
 extern WiFiClientSecure client;
 extern UniversalTelegramBot bot;
 extern ModbusMaster node;
+extern  uint16_t param;
+extern bool readOk;
+extern bool writeOk;
+extern int modbusBbaActiva;
 
 extern bool updatedRecently;
 extern const int updateDelay;
@@ -55,5 +60,59 @@ extern uint32_t salida_595; // Para almacenar los estados de salida
 extern uint8_t entrada_165;   // Para almacenar el estado leído de las entradas
 
 extern bool wifiConnected;
+
+// Variables de gestionATS
+extern bool RL;
+extern bool RO;
+extern bool RG;
+extern bool Lok;
+extern bool Gok;
+extern bool Fok;
+extern bool Man;
+extern bool Lin;
+extern bool Oin;
+extern bool Gin;
+extern bool Gon;
+extern bool OOK;
+extern bool LOK;
+extern bool GOK;
+extern bool CTO;
+extern bool PRE;
+extern bool ARR;
+extern bool GOK;
+extern bool OOK;
+extern bool LOK;
+extern bool Gon;
+extern bool Bok;
+extern bool respuesta;
+
+extern int CicloATS;
+extern int cicloGrupo;
+
+
+extern String modoATS;
+extern String modoBomba;
+extern int CicloBomba;
+extern int bombaActiva; 
+extern int horasActiva;
+extern int B;
+extern uint16_t vel;
+
+struct Bomba {
+  bool enc;     // Encendida o apagada
+  uint16_t vel; // Velocidad (entero sin signo de 16 bits)
+  uint16_t horaIni; // Velocidad (entero sin signo de 16 bits)
+  uint16_t horas; // Velocidad (entero sin signo de 16 bits)
+  bool marcha;  // En marcha o no
+  bool hab;     // Habilitada o no
+  bool dis;     // Disponible o no
+};
+
+// Declara array de bombas
+extern unsigned long t_anterior;
+extern unsigned long elapsed;
+extern unsigned long elapsedArray[3];
+extern Bomba bombas[3]; // Declara un array de 3 bombas
+
 
 #endif

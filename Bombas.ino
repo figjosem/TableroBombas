@@ -13,7 +13,7 @@
 
 void setup() {
   Serial.begin(115200);
-  
+  actualizarSalidas();
   if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
     Serial.println("Error al configurar IP estática.");
   }
@@ -36,7 +36,8 @@ void setup() {
   delay(updateDelay);
   updatedRecently = false;
   
-  lastUpdateId = loadLastUpdateId();    
+  lastUpdateId = loadLastUpdateId();   
+  t_anterior = millis(); 
 }
 
 void loop() {
@@ -46,26 +47,25 @@ void loop() {
   // Obtener el tiempo actual
   unsigned long currentTime = millis();
 
-  // Actualizar entradas y salidas cada 200 ms
+  // Actualizar entradas y salidas cada 100 ms
   if (currentTime - lastUpdateTime >= 200) { // Cambia 200 a 500 si deseas un intervalo mayor
     lastUpdateTime = currentTime; // Actualiza el tiempo de la última ejecución
 
     // Leer entradas
     leerEntradas();
-    salida_595 |= entrada_165 << 16;
+    leeVelocidad();
 
+    gestionATS();
+    gestionGrupo();
+    controlBombas();
     // Actualizar salidas
-    actualizarSalidas(salida_595);
+    actualizarSalidas();
   }
-
-  // Procesar mensajes de Telegram
-  int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-  while (numNewMessages) {
-    handleNewMessages(numNewMessages);
-    numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-    if (restart) {
+  
+  telegramMsg();
+  
+   if (restart) {
       restart = false;
       ESP.restart();
-    }
-  }
+    }  
 }

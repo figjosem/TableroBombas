@@ -28,3 +28,44 @@ uint32_t salida_595 = 0; // Inicializa salidas en 0
 uint8_t entrada_165 = 0;           // Inicializa entradas en 0
 
 bool wifiConnected = false;
+
+bool Lin = false;  // Definición de la variable
+bool Oin = false;
+bool Gin = false;
+bool Lok = false;
+bool Gok = false;
+bool Fok = false;
+bool Man = false;
+
+bool RL = false;
+bool RO = false;
+bool RG = false;
+bool CTO = false;
+bool PRE = false;
+bool ARR = false;
+String modoATS = "Auto";
+
+// variables.cpp
+bool GOK = false;
+bool OOK = false;
+bool LOK = false;
+bool Gon = false;
+bool Bok = true;
+bool respuesta = false;
+
+int CicloATS = 0;
+int cicloGrupo = 10;
+uint16_t param = 0;
+bool readOk = false ;
+bool writeOk = false ;
+int modbusBbaActiva = 0;
+uint16_t vel = 0;
+int B = 2;
+int horasActiva = 0;
+unsigned long elapsed = 0;
+unsigned long elapsedArray[3] = {0, 0, 0};
+
+
+unsigned long t_anterior =  0;
+Bomba bombas[3]; //definicion de array
+int bombaActiva = -1; //  -1; 0; 2
