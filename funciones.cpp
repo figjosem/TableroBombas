@@ -155,72 +155,95 @@ void processCommand(String command, String chat_id) {
   command.trim();
   Serial.println("Comando recibido: " + command);
 
-  int spaceIndex = command.indexOf(' ');
-  
-  // Verificar si el comando es "/version" sin parámetros
+  // Procesar comandos simples
   if (command == "/version") {
-    processBombaCommand("99", chat_id);
-    return; // Terminar la función para evitar el mensaje de error
-  }
-  if (command == "/entradas") {
-    processBombaCommand("98", chat_id);
-    return; // Terminar la función para evitar el mensaje de error
-  }
-  if (command == "/update") {
-    lastUpdateId = updateId;
-      saveLastUpdateId(lastUpdateId);
-      delay(5); 
-      processUpdateCommand("https://raw.githubusercontent.com/figjosem/TableroBombas/refs/heads/main/bin/Bombas.bin", chat_id);
-    return; // Terminar la función para evitar el mensaje de error
-  }
-  if (command == "/reset") {
-    lastUpdateId = updateId;
-      saveLastUpdateId(lastUpdateId);
-      delay(5); 
-       bot.sendMessage(chat_id, "Reiniciando...", "");
-      updatedRecently = true;
-      delay(1000);
-      restart = true;
-      delay(1000);
-      return; // Terminar la función para evitar el mensaje de error
-  }
-  if (command == "/arranque") {
-    lastUpdateId = updateId;
-      saveLastUpdateId(lastUpdateId);
-      delay(5); 
-       bot.sendMessage(chat_id, "Intentando arrancar Grupo.", "");
-      respuesta = true;
-      return; // Terminar la función para evitar el mensaje de error
+    bot.sendMessage(chat_id, "Version " + String(VERSION) + ".", "");
+    return;
   }
 
+  if (command == "/entradas") {
+    String binario = String(entrada_165, BIN); // Convertir a binario
+    while (binario.length() < 8) {  // Rellenar con ceros hasta 8 caracteres
+      binario = "0" + binario;
+    }
+    bot.sendMessage(chat_id, "Entradas: " + binario + ".", "");
+    return;
+  }
+
+  if (command == "/update") {
+    lastUpdateId = updateId;
+    saveLastUpdateId(lastUpdateId);
+    delay(5);
+    processUpdateCommand("https://raw.githubusercontent.com/figjosem/TableroBombas/refs/heads/main/bin/Bombas.bin", chat_id);
+    return;
+  }
+
+  if (command == "/reset") {
+    lastUpdateId = updateId;
+    saveLastUpdateId(lastUpdateId);
+    delay(5);
+    bot.sendMessage(chat_id, "Reiniciando...", "");
+    updatedRecently = true;
+    delay(1000);
+    restart = true;
+    delay(1000);
+    return;
+  }
+
+  if (command == "/grupoOn") {
+    lastUpdateId = updateId;
+    saveLastUpdateId(lastUpdateId);
+    delay(5);
+    bot.sendMessage(chat_id, "Intentando arrancar Grupo.", "");
+    respuesta = true;
+    return;
+  }
+
+  // Comandos con parámetros
+  int spaceIndex = command.indexOf(' ');
   if (spaceIndex != -1) {
     String action = command.substring(0, spaceIndex);
     String argument = command.substring(spaceIndex + 1);
 
     if (action == "/write") {
       processWriteCommand(argument, chat_id);
-    } else if (action == "/bomba") {
-      if (argument.toInt() > 3 or argument.toInt() < 1) {
-      bot.sendMessage(chat_id, "Error: valor fuera de rango.", "");  
-      } else {
-      processBombaCommand(argument, chat_id);}
-      
-    } else if (action == "/read") {
+    } 
+    else if (action == "/bomba") {
+      processBombaCommand("activa", argument, chat_id);
+    } 
+    else if (action == "/bombaOn") {
+      processBombaCommand("on", argument, chat_id);
+    } 
+    else if (action == "/bombaOff") {
+      processBombaCommand("off", argument, chat_id);
+    } 
+    else if (action == "/bombaHab") {
+      processBombaCommand("hab", argument, chat_id);
+    }
+    else if (action == "/bombaDeshab") {
+      processBombaCommand("deshab", argument, chat_id);
+    }
+    else if (action == "/read") {
       processReadCommand(argument, chat_id);
-    } else if (action == "/modoATS") {
-      processModoATSCommand(argument, chat_id);  
-    } else if (action == "/update") {
+    } 
+    else if (action == "/modoATS") {
+      processModoATSCommand(argument, chat_id);
+    } 
+    else if (action == "/update") {
       lastUpdateId = updateId;
       saveLastUpdateId(lastUpdateId);
-      delay(5); 
+      delay(5);
       processUpdateCommand(argument, chat_id);
-    } else {
+    } 
+    else {
       bot.sendMessage(chat_id, "Error: comando no reconocido.", "");
     }
-  } else {
+  } 
+  else {
     bot.sendMessage(chat_id, "Error: formato de comando incorrecto.", "");
   }
 }
+
 
 void processWriteCommand(String argument, String chat_id) {
   int spaceIndex = argument.indexOf(' ');
@@ -249,22 +272,54 @@ void processModoATSCommand(String argument, String chat_id) {
    bot.sendMessage(chat_id, "ATS en modo " + argument , "");
 }}
 
-void processBombaCommand(String argument, String chat_id) {
-  int slaveID = argument.toInt();
-  if (slaveID == 99) {
-    bot.sendMessage(chat_id, "Version " + String(VERSION) + "." , "");
-    } else if (slaveID == 98) {
-      String binario = String(entrada_165, BIN); // Convertir a binario
-      while (binario.length() < 8) {  // Rellenar con ceros hasta que tenga 8 caracteres
-         binario = "0" + binario;
-      }
-      bot.sendMessage(chat_id, "Entradas: " + binario + "." , ""); 
-  } else {
-  //leerDatoModbus(modbusAddress, chat_id);
-  node.begin(slaveID, Serial1);  // Slave ID 1
-  modbusBbaActiva = slaveID;
-   bot.sendMessage(chat_id, "Comando recibido. Bomba " + argument + " activa." , "");
-    }
+// Nueva función para procesar solo la selección de bomba activa
+void processBombaCommand(String cmdType, String bombNumber, String chat_id) {
+  int id = bombNumber.toInt();
+  
+  // Verifica que el número de bomba esté en el rango válido (1 a 3, por ejemplo)
+  if (id < 1 || id > 3) {
+    bot.sendMessage(chat_id, "Error: número de bomba fuera de rango.", "");
+    return;
+  }
+  
+  if (cmdType == "activa") {
+    // Seleccionar la bomba activa: se cambia el esclavo Modbus
+    node.begin(id, Serial1);
+    modbusBbaActiva = id;
+    bot.sendMessage(chat_id, "Bomba " + bombNumber + " activada.", "");
+  }
+  else if (cmdType == "on") {
+    // Enciende o pone en marcha la bomba
+    // Aquí puedes llamar a una función que active la bomba
+      int activa = modbusBbaActiva;
+      
+        node.begin(id, Serial1);
+        if (bombas[(id-1)].enc) {
+          enviarDatoModbus(8192, 1, "esp32");
+          if (writeOk) bot.sendMessage(chat_id, "Bomba " + bombNumber + " en marcha.", "");
+        } else {
+          bot.sendMessage(chat_id, "El Variador " + bombNumber + " no esta apagado o no responde.", "");
+        }
+        node.begin(activa, Serial1);
+  }
+  else if (cmdType == "off") {
+    // Detiene la bomba
+    // Aquí puedes llamar a una función que detenga la bomba
+    bot.sendMessage(chat_id, "Bomba " + bombNumber + " detenida.", "");
+  }
+  else if (cmdType == "hab") {
+    // Habilita la bomba
+    // Aquí puedes llamar a una función que habilite la bomba
+    bot.sendMessage(chat_id, "Bomba " + bombNumber + " habilitada.", "");
+  }
+  else if (cmdType == "deshab") {
+    // desHabilita la bomba
+    // Aquí puedes llamar a una función que habilite la bomba
+    bot.sendMessage(chat_id, "Bomba " + bombNumber + " deshabilitada.", "");
+  }
+  else {
+    bot.sendMessage(chat_id, "Error: comando de bomba no reconocido.", "");
+  }
 }
 
 void processUpdateCommand(String url, String chat_id) {
