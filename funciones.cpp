@@ -298,14 +298,24 @@ void processBombaCommand(String cmdType, String bombNumber, String chat_id) {
           enviarDatoModbus(8192, 1, "esp32");
           if (writeOk) bot.sendMessage(chat_id, "Bomba " + bombNumber + " en marcha.", "");
         } else {
-          bot.sendMessage(chat_id, "El Variador " + bombNumber + " no esta apagado o no responde.", "");
+          bot.sendMessage(chat_id, "El Variador " + bombNumber + " esta apagado o no responde.", "");
         }
         node.begin(activa, Serial1);
   }
   else if (cmdType == "off") {
-    // Detiene la bomba
+     // Detiene la bomba
     // Aquí puedes llamar a una función que detenga la bomba
-    bot.sendMessage(chat_id, "Bomba " + bombNumber + " detenida.", "");
+      int activa = modbusBbaActiva;
+      
+        node.begin(id, Serial1);
+        if (bombas[(id-1)].enc) {
+          enviarDatoModbus(8192, 5, "esp32");
+          if (writeOk)   bot.sendMessage(chat_id, "Bomba " + bombNumber + " detenida.", "");
+        } else {
+          bot.sendMessage(chat_id, "El Variador " + bombNumber + " esta apagado o no responde.", "");
+        }
+        node.begin(activa, Serial1);
+
   }
   else if (cmdType == "hab") {
     // Habilita la bomba
@@ -830,7 +840,7 @@ void leeVelocidad() {
       bombasEnc++;
     }
   }
-  vel = sumaVel / bombasEnc;
+   vel = (bombasEnc > 0) ? (sumaVel / bombasEnc) : 0;
 }
 
 void controlBombas() {
@@ -952,7 +962,7 @@ void setPresion(int presionx10) {
 }
 
 void telegramMsg() {
-  // Procesar mensajes de Telegram
+    // Procesar mensajes de Telegram
   int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
   while (numNewMessages) {
     handleNewMessages(numNewMessages);

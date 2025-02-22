@@ -30,6 +30,7 @@ void setup() {
   Serial1.begin(19200, SERIAL_8N1, RX_PIN, TX_PIN);
   
   node.begin(1, Serial1);  // Slave ID 1
+  node.setTimeout(100);
   node.preTransmission(preTransmission);
   node.postTransmission(postTransmission);
 
@@ -58,10 +59,9 @@ void loop() {
     gestionATS();
     gestionGrupo();
     controlBombas();
-    // Actualizar salidas
     actualizarSalidas();
   }
-  
+
   telegramMsg();
   
    if (restart) {

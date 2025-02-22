@@ -2,6 +2,8 @@
 
 const char* ssid = "ClaroFibra467";
 const char* password = "17438327";
+//const char* ssid = "AGRO";
+//const char* password = "AGRO1234";
 IPAddress local_IP(192, 168, 100, 50);
 IPAddress gateway(192, 168, 100, 1);
 IPAddress subnet(255, 255, 255, 0);
