@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
-#include <ModbusMaster.h>
+#include <ModbusRTU.h>
 #include <HTTPUpdate.h>
 #include <EEPROM.h>
 
@@ -28,7 +28,7 @@
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12.3"
+#define VERSION "7.12.4"
 
 extern const char* ssid;
 extern const char* password;
@@ -45,7 +45,8 @@ extern unsigned long tiempoActual ;
 extern const String BOTtoken;
 extern WiFiClientSecure client;
 extern UniversalTelegramBot bot;
-extern ModbusMaster node;
+extern ModbusRTU modbus; // Declaración externa
+//extern ModbusMaster node;
 extern  uint16_t param;
 extern bool readOk;
 extern bool writeOk;
@@ -85,6 +86,12 @@ extern bool LOK;
 extern bool Gon;
 extern bool Bok;
 extern bool respuesta;
+extern volatile bool lecturaCompleta;
+extern volatile uint16_t registroLeido ;
+// Declaración del callback
+extern bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data);
+
+
 
 extern int CicloATS;
 extern int cicloGrupo;
@@ -104,7 +111,7 @@ struct Bomba {
   uint16_t horaIni; // Velocidad (entero sin signo de 16 bits)
   uint16_t horas; // Velocidad (entero sin signo de 16 bits)
   bool marcha;  // En marcha o no
-  bool hab;     // Habilitada o no
+  bool autom;     // manual o auto
   bool dis;     // Disponible o no
 };
 

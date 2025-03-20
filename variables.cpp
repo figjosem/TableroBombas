@@ -18,7 +18,7 @@ const String BOTtoken = "8141829096:AAEOBTq9R9oluiCmetI4RcZPZQSYxI0fYrg";
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-ModbusMaster node;
+ModbusRTU modbus ;//(&Serial1, RE_PIN);      // Reemplazar ModbusMaster node; ModbusMaster node;
 
 bool updatedRecently = false;
 const int updateDelay = 10000;
@@ -54,6 +54,10 @@ bool LOK = false;
 bool Gon = false;
 bool Bok = true;
 bool respuesta = false;
+volatile bool lecturaCompleta = false;
+volatile uint16_t valorLeidoGlobal = 0;
+
+
 
 int CicloATS = 0;
 int cicloGrupo = 10;
@@ -71,3 +75,4 @@ unsigned long elapsedArray[3] = {0, 0, 0};
 unsigned long t_anterior =  0;
 Bomba bombas[3]; //definicion de array
 int bombaActiva = -1; //  -1; 0; 2
+String modoBomba = "Manual";
