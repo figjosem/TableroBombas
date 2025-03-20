@@ -58,7 +58,7 @@ void loop() {
 
     // Leer entradas
     leerEntradas();
-    //leeVelocidad();
+    leeVelocidad();
    
     modbus.task();
 

@@ -249,11 +249,11 @@ void processWriteCommand(String argument, String chat_id) {
   String valueStr   = argument.substring(secondSpace + 1);
   
   // Convertir a números
-  uint8_t slave_id     = (uint8_t)(slaveStr.toInt()); // Si se ingresa 1, se convierte en 0
+  uint8_t wrtcmd_id     = (uint8_t)(slaveStr.toInt()); // Si se ingresa 1, se convierte en 0
   uint16_t modbusAddress = (uint16_t) addressStr.toInt();
   int modbusValue        = valueStr.toInt();
   
-  enviarDatoModbus(slave_id, modbusAddress, modbusValue, chat_id);
+  enviarDatoModbus(wrtcmd_id, modbusAddress, modbusValue, chat_id);
 }
 
 void processReadCommand(String argument, String chat_id) {
@@ -268,11 +268,11 @@ void processReadCommand(String argument, String chat_id) {
   String modbusIdStr = argument.substring(0, spaceIndex);
   String regStr = argument.substring(spaceIndex + 1);
   regStr.trim();
-  uint8_t slave_id = modbusIdStr.toInt() ;   // Por ejemplo, si el usuario ingresa "1"
+  uint8_t rdcmd_id = modbusIdStr.toInt() ;   // Por ejemplo, si el usuario ingresa "1"
   uint16_t registro = regStr.toInt();        // Por ejemplo, "4097"
   
   // Llamar a la función leerDatoModbus con el modbus_id y el registro correspondiente
-  leerDatoModbus((uint8_t)slave_id, (uint16_t)registro, chat_id);
+  leerDatoModbus((uint8_t)rdcmd_id, (uint16_t)registro, chat_id);
 }
 
 void processModoATSCommand(String argument, String chat_id) {
@@ -365,8 +365,8 @@ void processUpdateCommand(String url, String chat_id) {
   updateFirmware(url, chat_id);
 }
 
-void enviarDatoModbus(uint8_t slave_id, uint16_t registro, uint16_t valor, String chat_id) {
-  bool success = modbus.writeHreg(slave_id, registro, valor);
+void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String chat_id) {
+  bool success = modbus.writeHreg(edmb_id, registro, valor);
   
    if (chat_id == "esp32") {
      writeOk = success;
@@ -379,9 +379,9 @@ void enviarDatoModbus(uint8_t slave_id, uint16_t registro, uint16_t valor, Strin
    }
 }
 
-void leerDatoModbus(uint8_t slave_id, uint16_t registro, String chat_id) {
+void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id) {
   uint16_t valorLeido = 0;
-  bool success = modbus.readHreg(slave_id, registro, &valorLeido);
+  bool success = modbus.readHreg(ldmb_id, registro, &valorLeido);
    unsigned long inicio = millis();
  
   // espera 45 ms a que se desocupe la comunicacion
