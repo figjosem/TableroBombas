@@ -28,7 +28,7 @@
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12.5"
+#define VERSION "7.12.6"
 
 extern const char* ssid;
 extern const char* password;

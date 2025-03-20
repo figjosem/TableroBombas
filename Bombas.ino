@@ -58,13 +58,13 @@ void loop() {
 
     // Leer entradas
     leerEntradas();
-    leeVelocidad();
+    //leeVelocidad();
    
     modbus.task();
 
     gestionATS();
     gestionGrupo();
-    controlBombas();
+    //controlBombas();
     actualizarSalidas();
   }
 
