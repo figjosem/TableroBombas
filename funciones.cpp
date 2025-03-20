@@ -366,16 +366,25 @@ void processUpdateCommand(String url, String chat_id) {
 }
 
 void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String chat_id) {
-  bool success = modbus.writeHreg(edmb_id, registro, valor);
+   unsigned long startTime = millis();
+   bool success = false;
+   
+   modbus.writeHreg(edmb_id, registro, valor);
+
+   while (millis() - startTime < 40) {
+     modbus.task();
+     if (modbus.slave() == 0) {
+       success = true;
+       break;
+     }
+     yield();      
+   }
   
    if (chat_id == "esp32") {
      writeOk = success;
    } else {
-     if (success) {
-       bot.sendMessage(chat_id, "Dato enviado exitosamente.", "");
-     } else {
-       bot.sendMessage(chat_id, "Error al enviar dato.", "");
-     }
+      String message = success ? "Dato enviado exitosamente." : "Error al enviar dato.";
+        bot.sendMessage(chat_id, message, "");
    }
 }
 
@@ -1006,14 +1015,14 @@ void controlBombas() {
         break;
     }
 
-  for (int i = 0; i < 3; i++) {
+ /* for (int i = 0; i < 3; i++) {
     if (bombas[i].marcha) {
       enviarDatoModbus(i, 8192, 1, "esp32");
       } else {
       enviarDatoModbus(i, 8192, 5, "esp32");
     }
     bombas[i].enc = writeOk;
-  }
+  }*/
  
 }
 
@@ -1046,4 +1055,11 @@ bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data) {
     //Serial.println("Error al leer el registro.");
   }
   return true;
+}
+
+void marchaBombas() {
+  for (int i = 0; i < 3; i++) {
+    enviarDatoModbus(i, 8192, bombas[i].marcha ? 1 : 5, "esp32");
+    bombas[i].enc = writeOk;
+  }
 }

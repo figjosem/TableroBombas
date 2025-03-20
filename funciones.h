@@ -36,6 +36,7 @@ void controlarLedWiFi();
 void gestionATS();
 void gestionGrupo();
 void controlBombas();
+void marchaBombas();
 void telegramMsg();
 void setPresion(int presionx10);
 
