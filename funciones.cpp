@@ -385,20 +385,20 @@ void leerDatoModbus(uint8_t slave_id, uint16_t registro, String chat_id) {
    unsigned long inicio = millis();
  
   // espera 45 ms a que se desocupe la comunicacion
-    while (modbus.slave() && (millis() - inicio < 50  )) {
+    while (modbus.slave() && (millis() - inicio < 30  )) {
       modbus.task();
       yield();
     }
     if (modbus.slave()) {
-      while (modbus.slave()) {modbus.task();
-      delay(1);
-      yield();
-      }
+   //   while (modbus.slave()) {modbus.task();
+   //   delay(1);
+   //   yield();
+   //   }
        readOk = false;
        param = 0;
         if (chat_id != "esp32") bot.sendMessage(chat_id, "Timeout alcanzado. El variador no responde.", "");
     } else {
-       readOk = true;
+       readOk = success;
        param = valorLeido;
        if (chat_id != "esp32") bot.sendMessage(chat_id, "Valor leído: " + String(param) , "");
     }     
@@ -1041,9 +1041,9 @@ bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data) {
   Serial.printf("Request result: 0x%02X\n", event);
   if (event == Modbus::EX_SUCCESS) {
     registroLeido = *(uint16_t*)data; // Almacenar el valor leído
-    Serial.printf("Valor del registro: %d\n", registroLeido);
+    //Serial.printf("Valor del registro: %d\n", registroLeido);
   } else {
-    Serial.println("Error al leer el registro.");
+    //Serial.println("Error al leer el registro.");
   }
   return true;
 }
