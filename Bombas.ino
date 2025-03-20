@@ -64,7 +64,7 @@ void loop() {
 
     gestionATS();
     gestionGrupo();
-    //controlBombas();
+    controlBombas();
     actualizarSalidas();
   }
 
