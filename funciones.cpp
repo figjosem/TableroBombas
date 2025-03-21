@@ -249,7 +249,7 @@ void processWriteCommand(String argument, String chat_id) {
   String valueStr   = argument.substring(secondSpace + 1);
   
   // Convertir a números
-  uint8_t wrtcmd_id     = (uint8_t)(slaveStr.toInt()); // Si se ingresa 1, se convierte en 0
+  uint8_t wrtcmd_id     = (uint8_t)(slaveStr.toInt()); // 
   uint16_t modbusAddress = (uint16_t) addressStr.toInt();
   int modbusValue        = valueStr.toInt();
   
@@ -268,7 +268,7 @@ void processReadCommand(String argument, String chat_id) {
   String modbusIdStr = argument.substring(0, spaceIndex);
   String regStr = argument.substring(spaceIndex + 1);
   regStr.trim();
-  uint8_t rdcmd_id = modbusIdStr.toInt() ;   // Por ejemplo, si el usuario ingresa "1"
+  uint8_t rdcmd_id = modbusIdStr.toInt() ;   // 
   uint16_t registro = regStr.toInt();        // Por ejemplo, "4097"
   
   // Llamar a la función leerDatoModbus con el modbus_id y el registro correspondiente
@@ -290,6 +290,7 @@ void processModoATSCommand(String argument, String chat_id) {
 void processBombaCommand(String argument, String chat_id) {
   // Se espera que 'argument' tenga el formato: "<nro> <comando>"
  int spaceIndex = argument.indexOf(' ');
+ String mensaje;
   if (spaceIndex == -1) {
     bot.sendMessage(chat_id, "Error: Formato incorrecto. Usa: /bomba <nro> <comando>", "");
     return;
@@ -301,10 +302,10 @@ void processBombaCommand(String argument, String chat_id) {
 
   
   // Convertir a números
-   int modbus_id = (uint8_t)(nroStr.toInt()); // nro de bomba
+   int bomba_id = (uint8_t)(nroStr.toInt()); // nro de bomba
  
   // Verifica que el número de bomba esté en el rango válido (1 a 3, por ejemplo)
-  if (modbus_id < 1 || modbus_id > 3) {
+  if (bomba_id < 1 || bomba_id > 3) {
     bot.sendMessage(chat_id, "Error: número de bomba fuera de rango.", "");
     return;
   }
@@ -318,42 +319,52 @@ void processBombaCommand(String argument, String chat_id) {
     // Enciende o pone en marcha la bomba
     // Aquí puedes llamar a una función que active la bomba
      
-   
-        if (bombas[(modbus_id-1)].enc) {
-          bombas[(modbus_id-1)].autom = false;
-          bombas[(modbus_id-1)].marcha = true;
-          bombas[(modbus_id-1)].dis = false;
-         // enviarDatoModbus(modbus_id, 8192, 1, "esp32");
-          if (writeOk) bot.sendMessage(chat_id, "Bomba " + nroStr + " en marcha.", "");
+        if (bombas[(bomba_id-1)].enc) {
+          bombas[(bomba_id-1)].autom = false;
+          bombas[(bomba_id-1)].marcha = true;
+          bombas[(bomba_id-1)].dis = false;
+          if ((bomba_id-1) == bombaActiva) bombaActiva = -1;
+          mensaje =  "Bomba " + nroStr + " en marcha.";
+          //bot.sendMessage(chat_id, "Bomba " + nroStr + " en marcha.", "");
         } else {
-          bot.sendMessage(chat_id, "El Variador " + nroStr + " esta apagado o no responde.", "");
+          mensaje = "El Variador " + nroStr + " esta apagado o no responde.";
+          //bot.sendMessage(chat_id, "El Variador " + nroStr + " esta apagado o no responde.", "");
         }
+          bot.sendMessage(chat_id, mensaje, "");
         
   }
   else if (comStr == "off") {
      // Detiene la bomba
     // Aquí puedes llamar a una función que detenga la bomba
      
-        if (bombas[(modbus_id-1)].enc) {
-          bombas[(modbus_id-1)].autom = false;
-          bombas[(modbus_id-1)].marcha = false;
-          bombas[(modbus_id-1)].dis = false;
-          if ((modbus_id-1) == bombaActiva) bombaActiva = -1;
-         // enviarDatoModbus(modbus_id, 8192, 5, "esp32");
-          if (writeOk)   bot.sendMessage(chat_id, "Bomba " + nroStr + " detenida.", "");
+        if (bombas[(bomba_id-1)].enc) {
+          bombas[(bomba_id-1)].autom = false;
+          bombas[(bomba_id-1)].marcha = false;
+          bombas[(bomba_id-1)].dis = false;
+          if ((bomba_id-1) == bombaActiva) bombaActiva = -1;
+          bot.sendMessage(chat_id, "Bomba " + nroStr + " detenida.", "");
         } else {
           bot.sendMessage(chat_id, "El Variador " + nroStr + " esta apagado o no responde.", "");
         }
-   
+         // bot.sendMessage(chat_id, mensaje, "");
   }
   else if (comStr == "auto") {
     // Habilita la bomba
     // Aquí puedes llamar a una función que habilite la bomba
-    bombas[(modbus_id-1)].autom = true;
-    bombas[(modbus_id-1)].marcha = false;
-    bombas[(modbus_id-1)].dis = true;
-    if ((modbus_id-1) == bombaActiva) bombaActiva = -1;
+    bombas[(bomba_id-1)].autom = true;
+    bombas[(bomba_id-1)].marcha = false;
+    bombas[(bomba_id-1)].dis = true;
     bot.sendMessage(chat_id, "Bomba " + nroStr + " autom.", "");
+  }
+  else if (comStr == "estado") {
+    String mensaje = "Bomba " + String(bomba_id) + "\n";
+    mensaje += "• Modo: " + String(bombas[(bomba_id-1)].autom ? "AUTO" : bombas[(bomba_id-1)].marcha ? "ON" : "OFF") + "\n";
+    mensaje += "• Disponible: " + String(bombas[(bomba_id-1)].dis ? "SÍ ✅" : "NO ❌") + "\n";
+    mensaje += "• Marcha: " + String(bombas[(bomba_id-1)].marcha ? "ACTIVA 🟢" : "DETENIDA 🔴") + "\n";
+    mensaje += "• Conexión: " + String(bombas[(bomba_id-1)].enc ? "ESTABLECIDA 📡" : "FALLIDA ⚠️") + "\n";
+    mensaje += "• Velocidad: " + String(bombas[(bomba_id-1)].vel) + " %";
+
+    bot.sendMessage(chat_id, mensaje, "");
   }
   else {
     bot.sendMessage(chat_id, "Error: comando de bomba no reconocido.", "");
@@ -367,51 +378,48 @@ void processUpdateCommand(String url, String chat_id) {
 
 void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String chat_id) {
    unsigned long startTime = millis();
-   bool success = false;
+   writeOk = false;
    
    modbus.writeHreg(edmb_id, registro, valor);
 
    while (millis() - startTime < 40) {
      modbus.task();
      if (modbus.slave() == 0) {
-       success = true;
+       writeOk = true;
        break;
      }
      yield();      
-   }
-  
+   }  
    if (chat_id == "esp32") {
-     writeOk = success;
    } else {
-      String message = success ? "Dato enviado exitosamente." : "Error al enviar dato.";
-        bot.sendMessage(chat_id, message, "");
+      String mensaje = writeOk ? "Dato enviado exitosamente." : "Error al enviar dato.";
+        bot.sendMessage(chat_id, mensaje, "");
    }
 }
 
 void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id) {
-  uint16_t valorLeido = 0;
-  bool success = modbus.readHreg(ldmb_id, registro, &valorLeido);
+   uint16_t valorLeido = 0;
+   readOk = false;
+   bombas[(ldmb_id-1)].enc = false;
+   modbus.readHreg(ldmb_id, registro, &valorLeido);
    unsigned long inicio = millis();
  
   // espera 45 ms a que se desocupe la comunicacion
-    while (modbus.slave() && (millis() - inicio < 30  )) {
+    while (millis() - inicio < 40  ) {
       modbus.task();
+       if (modbus.slave() == 0) {
+       readOk = true;
+       bombas[(ldmb_id-1)].enc = true;
+       break;
+     }
       yield();
     }
-    if (modbus.slave()) {
-   //   while (modbus.slave()) {modbus.task();
-   //   delay(1);
-   //   yield();
-   //   }
-       readOk = false;
-       param = 0;
-        if (chat_id != "esp32") bot.sendMessage(chat_id, "Timeout alcanzado. El variador no responde.", "");
-    } else {
-       readOk = success;
-       param = valorLeido;
-       if (chat_id != "esp32") bot.sendMessage(chat_id, "Valor leído: " + String(param) , "");
-    }     
-    } 
+     param = valorLeido ;
+     
+       String mensaje = readOk ? "Valor leído: " + String(param) : "Timeout alcanzado. El variador no responde.";
+       bot.sendMessage(chat_id, mensaje, "");
+     //} 
+   } 
    
    
    
@@ -895,21 +903,21 @@ void evaluarEstado() {
 }
 
 void leeVelocidad() {
-    uint8_t slave_id ;
+    uint8_t lv_id ;
     uint16_t sumaVel = 0;
     uint16_t bombasEnc = 0;
   for (int i = 0; i < 3; i++) {
-    slave_id = i + 1;
-     leerDatoModbus(slave_id, 4097,"esp32"); 
+    lv_id = i + 1;
+     leerDatoModbus(lv_id, 4097,"esp32"); 
     if (readOk) {
-      bombas[i].enc = true;
+      //bombas[i].enc = true;
       bombas[i].vel = param;   
       if (bombas[i].marcha) {
         sumaVel += bombas[i].vel;
         bombasEnc++;
       } 
     } else {
-      bombas[i].enc = false;
+      //bombas[i].enc = false;
       //bombas[i].marcha = false;
       bombas[i].vel = 0;    
     }
@@ -1031,8 +1039,8 @@ void setPresion(int presionx10) {
   int valorpx100 = (setpresionx10 * 8 ) + 200; 
   for (int i = 0; i < 3; i++) {
     if (bombas[i].enc) {
-      enviarDatoModbus(i, 62738, (valorpx100 - 20), "esp32");
-      enviarDatoModbus(i, 62740, (valorpx100 + 20), "esp32");
+      enviarDatoModbus((i+1), 62738, (valorpx100 - 20), "esp32");
+      enviarDatoModbus((i+1), 62740, (valorpx100 + 20), "esp32");
     } 
   }
  }
@@ -1059,7 +1067,7 @@ bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data) {
 
 void marchaBombas() {
   for (int i = 0; i < 3; i++) {
-    enviarDatoModbus(i, 8192, bombas[i].marcha ? 1 : 5, "esp32");
+    enviarDatoModbus((i+1), 8192, bombas[i].marcha ? 1 : 5, "esp32");
     bombas[i].enc = writeOk;
   }
 }
