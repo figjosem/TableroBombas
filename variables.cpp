@@ -76,3 +76,4 @@ unsigned long t_anterior =  0;
 Bomba bombas[3]; //definicion de array
 int bombaActiva = -1; //  -1; 0; 2
 String modoBomba = "Manual";
+int x = 0;

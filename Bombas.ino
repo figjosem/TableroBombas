@@ -53,7 +53,7 @@ void loop() {
   unsigned long currentTime = millis();
 
   // Actualizar entradas y salidas cada 100 ms
-  if (currentTime - lastUpdateTime >= 2000) { // Cambia 200 a 500 si deseas un intervalo mayor
+  if (currentTime - lastUpdateTime >= 500) { // Cambia 200 a 500 si deseas un intervalo mayor
     lastUpdateTime = currentTime; // Actualiza el tiempo de la última ejecución
 
     // Leer entradas
@@ -67,9 +67,14 @@ void loop() {
     controlBombas();
     actualizarSalidas();
     marchaBombas();
+    x++cd ;
+    if ( x == 5) {
+      telegramMsg();
+      x = 0;  
+    }
+    
   }
 
-  telegramMsg();
   
    if (restart) {
       restart = false;

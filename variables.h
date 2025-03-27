@@ -28,7 +28,7 @@
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12.10"
+#define VERSION "7.12.11"
 
 extern const char* ssid;
 extern const char* password;
@@ -121,5 +121,5 @@ extern unsigned long elapsed;
 extern unsigned long elapsedArray[3];
 extern Bomba bombas[3]; // Declara un array de 3 bombas
 
-
+extern int x ;
 #endif

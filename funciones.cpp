@@ -382,7 +382,7 @@ void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String
    
    modbus.writeHreg(edmb_id, registro, valor);
 
-   while (millis() - startTime < 40) {
+   while (millis() - startTime < 30) {
      modbus.task();
      if (modbus.slave() == 0) {
        writeOk = true;
@@ -390,11 +390,10 @@ void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String
      }
      yield();      
    }  
-   if (chat_id == "esp32") {
-   } else {
+  
       String mensaje = writeOk ? "Dato enviado exitosamente." : "Error al enviar dato.";
         bot.sendMessage(chat_id, mensaje, "");
-   }
+   
 }
 
 void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id) {
@@ -405,37 +404,23 @@ void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id) {
    unsigned long inicio = millis();
  
   // espera 45 ms a que se desocupe la comunicacion
-    while (millis() - inicio < 40  ) {
+    while (millis() - inicio < 30  ) {
       modbus.task();
        if (modbus.slave() == 0) {
-       readOk = true;
-       bombas[(ldmb_id-1)].enc = true;
-       break;
-     }
-      yield();
+          readOk = true;
+          bombas[(ldmb_id-1)].enc = true;
+          break;
+       }
+       yield();
     }
      param = valorLeido ;
      
        String mensaje = readOk ? "Valor leído: " + String(param) : "Timeout alcanzado. El variador no responde.";
        bot.sendMessage(chat_id, mensaje, "");
-     //} 
+      
    } 
    
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   /*
+  /*
    if (!modbus.slave()) {
     bool success = modbus.readHreg(slave_id, registro, &registroLeido,  cbWrite); // Leer un solo registro
   }
@@ -910,7 +895,6 @@ void leeVelocidad() {
     lv_id = i + 1;
      leerDatoModbus(lv_id, 4097,"esp32"); 
     if (readOk) {
-      //bombas[i].enc = true;
       bombas[i].vel = param;   
       if (bombas[i].marcha) {
         sumaVel += bombas[i].vel;
@@ -1068,6 +1052,6 @@ bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data) {
 void marchaBombas() {
   for (int i = 0; i < 3; i++) {
     enviarDatoModbus((i+1), 8192, bombas[i].marcha ? 1 : 5, "esp32");
-    bombas[i].enc = writeOk;
+    //bombas[i].enc = writeOk;
   }
 }
