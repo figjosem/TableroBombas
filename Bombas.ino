@@ -67,7 +67,7 @@ void loop() {
     controlBombas();
     actualizarSalidas();
     marchaBombas();
-    x++cd ;
+    x++ ;
     if ( x == 5) {
       telegramMsg();
       x = 0;  
