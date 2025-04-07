@@ -9,6 +9,8 @@
 #include "funciones.h"
 #include "variables.h"
 
+unsigned long lastTelegramCheck = 0;
+const unsigned long intervaloTelegram = 2000; // cada 2 segundos
 
 void setup() {
 //  Serial.begin(115200);
@@ -46,38 +48,37 @@ void setup() {
 }
 
 void loop() {
-  // Controlar LED de estado Wi-Fi
-  controlarLedWiFi();
 
-  // Obtener el tiempo actual
+
+  
+  controlarLedWiFi();
+  
+  // Ejecutar el motor de Modbus lo más seguido posible
+  modbus.task();
+
   unsigned long currentTime = millis();
 
-  // Actualizar entradas y salidas cada 100 ms
-  if (currentTime - lastUpdateTime >= 500) { // Cambia 200 a 500 si deseas un intervalo mayor
-    lastUpdateTime = currentTime; // Actualiza el tiempo de la última ejecución
-
-    // Leer entradas
+  // Lógica de actualización periódica (cada 500 ms)
+  if (currentTime - lastUpdateTime >= 500) {
+    lastUpdateTime = currentTime;
+    
     leerEntradas();
     leeVelocidad();
-   
-    modbus.task();
-
     gestionATS();
     gestionGrupo();
     controlBombas();
     actualizarSalidas();
     marchaBombas();
-    x++ ;
-    if ( x == 5) {
-      telegramMsg();
-      x = 0;  
-    }
-    
   }
 
-  
-   if (restart) {
-      restart = false;
-      ESP.restart();
-    }  
+  // Revisión de Telegram cada 2 segundos
+  if (currentTime - lastTelegramCheck >= intervaloTelegram) {
+    lastTelegramCheck = currentTime;
+    telegramMsg();
+  }
+
+  if (restart) {
+    restart = false;
+    ESP.restart();
+  }
 }
