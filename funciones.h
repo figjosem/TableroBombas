@@ -12,6 +12,8 @@ uint16_t read165();
 // Funciones de control de LED
 void updateLedStatus(bool wifiConnected);
 
+void colaMsj(String chat_id, String texto);
+void procesarMensajesTelegram();
 // Funciones principales
 //void preTransmission();
 //void postTransmission();
@@ -31,7 +33,8 @@ uint32_t loadLastUpdateId();
 void inicializarEntradasSalidas();
 void actualizarSalidas(); //uint32_t datas);
 void leerEntradas();
-void leeVelocidad();
+void leeVelocidad(int i);
+void procesarVelocidad();
 void controlarLedWiFi();
 void gestionATS();
 void gestionGrupo();

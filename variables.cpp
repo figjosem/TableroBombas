@@ -1,4 +1,5 @@
 #include "variables.h"
+#include <queue>
 
 const char* ssid = "ClaroFibra467";
 const char* password = "17438327";
@@ -13,6 +14,7 @@ IPAddress secondaryDNS(8, 8, 4, 4);
 unsigned long lastUpdateTime = 0; // Variable para controlar el tiempo
 
 
+std::queue<MensajeTelegram> colaMensajes;
 
 const String BOTtoken = "8141829096:AAEOBTq9R9oluiCmetI4RcZPZQSYxI0fYrg";
 WiFiClientSecure client;

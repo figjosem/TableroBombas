@@ -1,5 +1,15 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
+#include <Arduino.h>
+#include <queue>
+
+struct MensajeTelegram {
+  String chat_id;
+  String texto;
+};
+
+extern std::queue<MensajeTelegram> colaMensajes;
+
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -28,7 +38,7 @@
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12.12"
+#define VERSION "7.12.13"
 
 extern const char* ssid;
 extern const char* password;

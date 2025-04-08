@@ -132,6 +132,19 @@ void controlarLedWiFi() {
 }
 
 
+void colaMsj(String chat_id, String texto) {
+  MensajeTelegram msg = { chat_id, texto };
+  colaMensajes.push(msg);
+}
+
+void procesarMensajesTelegram() {
+  if (!colaMensajes.empty() ) {
+    MensajeTelegram msg = colaMensajes.front();
+    colaMensajes.pop();
+    bot.sendMessage(msg.chat_id, msg.texto, "");
+  }
+}
+
 void handleNewMessages(int numNewMessages) {
   for (int i = 0; i < numNewMessages; i++) {
     updateId = bot.messages[i].update_id;
@@ -144,8 +157,8 @@ void handleNewMessages(int numNewMessages) {
     String fromName = bot.messages[i].from_name;
     String chat_id = bot.messages[i].chat_id;
 
-    Serial.println("Mensaje recibido de " + fromName + ": " + text);
-    bot.sendMessage(chat_id, "Recibido: " + text , "");
+    //Serial.println("Mensaje recibido de " + fromName + ": " + text);
+    colaMsj(chat_id, "Recibido: " + text );
 
     processCommand(text, chat_id);
   }
@@ -157,7 +170,7 @@ void processCommand(String command, String chat_id) {
 
   // Procesar comandos simples
   if (command == "/version") {
-    bot.sendMessage(chat_id, "Version " + String(VERSION) + ".", "");
+    colaMsj(chat_id, "Version " + String(VERSION) + ".");
     return;
   }
 
@@ -166,7 +179,7 @@ void processCommand(String command, String chat_id) {
     while (binario.length() < 8) {  // Rellenar con ceros hasta 8 caracteres
       binario = "0" + binario;
     }
-    bot.sendMessage(chat_id, "Entradas: " + binario + ".", "");
+    colaMsj(chat_id, "Entradas: " + binario + ".");
     return;
   }
 
@@ -182,7 +195,7 @@ void processCommand(String command, String chat_id) {
     lastUpdateId = updateId;
     saveLastUpdateId(lastUpdateId);
     delay(5);
-    bot.sendMessage(chat_id, "Reiniciando...", "");
+    colaMsj(chat_id, "Reiniciando...");
     updatedRecently = true;
     delay(1000);
     restart = true;
@@ -194,7 +207,7 @@ void processCommand(String command, String chat_id) {
     lastUpdateId = updateId;
     saveLastUpdateId(lastUpdateId);
     delay(5);
-    bot.sendMessage(chat_id, "Intentando arrancar Grupo.", "");
+    colaMsj(chat_id, "Intentando arrancar Grupo.");
     respuesta = true;
     return;
   }
@@ -224,11 +237,11 @@ void processCommand(String command, String chat_id) {
       processUpdateCommand(argument, chat_id);
     } 
     else {
-      bot.sendMessage(chat_id, "Error: comando no reconocido.", "");
+      colaMsj(chat_id, "Error: comando no reconocido.");
     }
   } 
   else {
-    bot.sendMessage(chat_id, "Error: formato de comando incorrecto.", "");
+    colaMsj(chat_id, "Error: formato de comando incorrecto.");
   }
 }
 
@@ -239,7 +252,7 @@ void processWriteCommand(String argument, String chat_id) {
   int secondSpace = argument.indexOf(' ', firstSpace + 1);
   
   if (firstSpace == -1 || secondSpace == -1) {
-    bot.sendMessage(chat_id, "Error: Formato incorrecto. Usa: /write <modbus_id> <direccion> <valor>", "");
+    colaMsj(chat_id, "Error: Formato incorrecto. Usa: /write <modbus_id> <direccion> <valor>");
     return;
   }
   
@@ -260,7 +273,7 @@ void processReadCommand(String argument, String chat_id) {
   // Se espera que 'argument' tenga el formato: "<modbus_id> <registro>"
   int spaceIndex = argument.indexOf(' ');
   if (spaceIndex == -1) {
-    bot.sendMessage(chat_id, "Error: Formato incorrecto. Usa /read <modbus_id> <registro>", "");
+    colaMsj(chat_id, "Error: Formato incorrecto. Usa /read <modbus_id> <registro>");
     return;
   }
   
@@ -278,11 +291,11 @@ void processReadCommand(String argument, String chat_id) {
 void processModoATSCommand(String argument, String chat_id) {
   //int modbusAddress = argument.toInt();
   if (argument == "estado") {
-   bot.sendMessage(chat_id, "ATS en modo " + modoATS + " CicloATS: " + String(CicloATS) + ", CicloGrupo: " + String(cicloGrupo)  , ""); 
+   colaMsj(chat_id, "ATS en modo " + modoATS + " CicloATS: " + String(CicloATS) + ", CicloGrupo: " + String(cicloGrupo)); 
       
   } else {
   modoATS = argument;
-   bot.sendMessage(chat_id, "ATS en modo " + argument , "");
+   colaMsj(chat_id, "ATS en modo " + argument );
 }
 }
 
@@ -292,7 +305,7 @@ void processBombaCommand(String argument, String chat_id) {
  int spaceIndex = argument.indexOf(' ');
  String mensaje;
   if (spaceIndex == -1) {
-    bot.sendMessage(chat_id, "Error: Formato incorrecto. Usa: /bomba <nro> <comando>", "");
+    colaMsj(chat_id, "Error: Formato incorrecto. Usa: /bomba <nro> <comando>");
     return;
   }
   
@@ -306,14 +319,14 @@ void processBombaCommand(String argument, String chat_id) {
  
   // Verifica que el número de bomba esté en el rango válido (1 a 3, por ejemplo)
   if (bomba_id < 1 || bomba_id > 3) {
-    bot.sendMessage(chat_id, "Error: número de bomba fuera de rango.", "");
+    colaMsj(chat_id, "Error: número de bomba fuera de rango.");
     return;
   }
   
  /* if (comStr == "activa") {
     // Seleccionar la bomba activa: se cambia el esclavo Modbus
     modbusBbaActiva = modbus_id;
-    bot.sendMessage(chat_id, "Bomba " + nroStr + " activada.", "");
+    colaMsj(chat_id, "Bomba " + nroStr + " activada.", "");
   }
   else*/ if (comStr == "on") {
     // Enciende o pone en marcha la bomba
@@ -325,12 +338,12 @@ void processBombaCommand(String argument, String chat_id) {
           bombas[(bomba_id-1)].dis = false;
           if ((bomba_id-1) == bombaActiva) bombaActiva = -1;
           mensaje =  "Bomba " + nroStr + " en marcha.";
-          //bot.sendMessage(chat_id, "Bomba " + nroStr + " en marcha.", "");
+          //colaMsj(chat_id, "Bomba " + nroStr + " en marcha.", "");
         } else {
           mensaje = "El Variador " + nroStr + " esta apagado o no responde.";
-          //bot.sendMessage(chat_id, "El Variador " + nroStr + " esta apagado o no responde.", "");
+          //colaMsj(chat_id, "El Variador " + nroStr + " esta apagado o no responde.", "");
         }
-          bot.sendMessage(chat_id, mensaje, "");
+          colaMsj(chat_id, mensaje);
         
   }
   else if (comStr == "off") {
@@ -342,11 +355,11 @@ void processBombaCommand(String argument, String chat_id) {
           bombas[(bomba_id-1)].marcha = false;
           bombas[(bomba_id-1)].dis = false;
           if ((bomba_id-1) == bombaActiva) bombaActiva = -1;
-          bot.sendMessage(chat_id, "Bomba " + nroStr + " detenida.", "");
+          colaMsj(chat_id, "Bomba " + nroStr + " detenida.");
         } else {
-          bot.sendMessage(chat_id, "El Variador " + nroStr + " esta apagado o no responde.", "");
+          colaMsj(chat_id, "El Variador " + nroStr + " esta apagado o no responde.");
         }
-         // bot.sendMessage(chat_id, mensaje, "");
+         // colaMsj(chat_id, mensaje, "");
   }
   else if (comStr == "auto") {
     // Habilita la bomba
@@ -354,7 +367,7 @@ void processBombaCommand(String argument, String chat_id) {
     bombas[(bomba_id-1)].autom = true;
     bombas[(bomba_id-1)].marcha = false;
     bombas[(bomba_id-1)].dis = true;
-    bot.sendMessage(chat_id, "Bomba " + nroStr + " autom.", "");
+    colaMsj(chat_id, "Bomba " + nroStr + " autom.");
   }
   else if (comStr == "estado") {
     String mensaje = "Bomba " + String(bomba_id) + "\n";
@@ -364,15 +377,15 @@ void processBombaCommand(String argument, String chat_id) {
     mensaje += "• Conexión: " + String(bombas[(bomba_id-1)].enc ? "ESTABLECIDA 📡" : "FALLIDA ⚠️") + "\n";
     mensaje += "• Velocidad: " + String(bombas[(bomba_id-1)].vel) + " %";
 
-    bot.sendMessage(chat_id, mensaje, "");
+    colaMsj(chat_id, mensaje);
   }
   else {
-    bot.sendMessage(chat_id, "Error: comando de bomba no reconocido.", "");
+    colaMsj(chat_id, "Error: comando de bomba no reconocido.");
   }
 }
 
 void processUpdateCommand(String url, String chat_id) {
-  bot.sendMessage(chat_id, "Iniciando actualización de firmware desde: " + url , "");
+  colaMsj(chat_id, "Iniciando actualización de firmware desde: " + url );
   updateFirmware(url, chat_id);
 }
 
@@ -392,7 +405,7 @@ void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String
    }  
   
       String mensaje = writeOk ? "Dato enviado exitosamente." : "Error al enviar dato.";
-        bot.sendMessage(chat_id, mensaje, "");
+        colaMsj(chat_id, mensaje);
    
 }
 
@@ -416,7 +429,7 @@ void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id) {
      param = valorLeido ;
      
        String mensaje = readOk ? "Valor leído: " + String(param) : "Timeout alcanzado. El variador no responde.";
-       bot.sendMessage(chat_id, mensaje, "");
+       colaMsj(chat_id, mensaje);
       
    } 
    
@@ -426,7 +439,7 @@ void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id) {
   }
   modbus.task();
   if (!success) {
-    bot.sendMessage(chat_id, "Error al encolar la lectura.", "");
+    colaMsj(chat_id, "Error al encolar la lectura.", "");
     return;
   }*/
   
@@ -438,10 +451,10 @@ void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id) {
   //}
   /*
   if (lecturaCompleta) {
-    bot.sendMessage(chat_id, "Valor leído: " + String(valorLeidoGlobal), "");
+    colaMsj(chat_id, "Valor leído: " + String(valorLeidoGlobal), "");
   }
   else {
-    bot.sendMessage(chat_id, "Timeout en la lectura.", "");
+    colaMsj(chat_id, "Timeout en la lectura.", "");
   }
 }
 */
@@ -452,17 +465,17 @@ void updateFirmware(String url, String chat_id) {
   switch (ret) {
     case HTTP_UPDATE_FAILED:
       Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
-      bot.sendMessage(chat_id, "Error en la actualización de firmware.", "");
+      colaMsj(chat_id, "Error en la actualización de firmware.");
       break;
 
     case HTTP_UPDATE_NO_UPDATES:
       Serial.println("HTTP_UPDATE_NO_UPDATES");
-      bot.sendMessage(chat_id, "No hay actualizaciones disponibles.", "");
+      colaMsj(chat_id, "No hay actualizaciones disponibles.");
       break;
 
     case HTTP_UPDATE_OK:
       Serial.println("HTTP_UPDATE_OK");
-      bot.sendMessage(chat_id, "Actualización completada. Reiniciando...", "");
+      colaMsj(chat_id, "Actualización completada. Reiniciando...");
       updatedRecently = true;
       delay(1000);
       restart = true;
@@ -887,27 +900,50 @@ void evaluarEstado() {
   }
 }
 
-void leeVelocidad() {
-    uint8_t lv_id ;
-    uint16_t sumaVel = 0;
-    uint16_t bombasEnc = 0;
-  for (int i = 0; i < 3; i++) {
-    lv_id = i + 1;
-     leerDatoModbus(lv_id, 4097,"esp32"); 
-    if (readOk) {
-      bombas[i].vel = param;   
-      if (bombas[i].marcha) {
-        sumaVel += bombas[i].vel;
-        bombasEnc++;
-      } 
-    } else {
-      //bombas[i].enc = false;
-      //bombas[i].marcha = false;
-      bombas[i].vel = 0;    
-    }
+void leeVelocidad(int i) {
+  if (i < 0 || i > 2) return;
+
+  uint8_t lv_id = i + 1;
+  leerDatoModbus(lv_id, 4097, "esp32");
+
+  if (readOk) {
+    bombas[i].vel = param;
+  } else {
+    bombas[i].vel = 0;
   }
-  vel = (bombasEnc > 0) ? (sumaVel / bombasEnc) : 0;
 }
+
+void procesarVelocidad() {
+  static int bombaIndex = 0;
+  static uint16_t sumaVel = 0;
+  static uint8_t bombasEnc = 0;
+ // static unsigned long ultimaLectura = 0;
+ // const unsigned long intervalo = 200; // Tiempo entre lecturas
+
+ // if (millis() - ultimaLectura >= intervalo) {
+ //   ultimaLectura = millis();
+
+    if (bombaIndex < 3) {
+      leeVelocidad(bombaIndex);
+
+      if (readOk && bombas[bombaIndex].marcha) {
+        sumaVel += bombas[bombaIndex].vel;
+        bombasEnc++;
+      }
+
+      bombaIndex++;
+    } else {
+      // Se completaron las 3 lecturas
+      vel = (bombasEnc > 0) ? (sumaVel / bombasEnc) : 0;
+
+      // Reiniciar para la próxima serie de lecturas
+      bombaIndex = 0;
+      sumaVel = 0;
+      bombasEnc = 0;
+    }
+ // }
+}
+
 
 void controlBombas() {
 

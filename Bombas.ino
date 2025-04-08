@@ -58,12 +58,12 @@ void loop() {
 
   unsigned long currentTime = millis();
 
-  // Lógica de actualización periódica (cada 500 ms)
-  if (currentTime - lastUpdateTime >= 500) {
+  // Lógica de actualización periódica (cada 200 ms)
+  if (currentTime - lastUpdateTime >= 200) {
     lastUpdateTime = currentTime;
     
     leerEntradas();
-    leeVelocidad();
+    procesarVelocidad();
     gestionATS();
     gestionGrupo();
     controlBombas();
@@ -74,6 +74,7 @@ void loop() {
   // Revisión de Telegram cada 2 segundos
   if (currentTime - lastTelegramCheck >= intervaloTelegram) {
     lastTelegramCheck = currentTime;
+    procesarMensajesTelegram();
     telegramMsg();
   }
 
