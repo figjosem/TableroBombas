@@ -131,35 +131,76 @@ void controlarLedWiFi() {
   }
 }
 
+void colaMb(uint8_t mdbus_id, uint16_t reg, String chat_id, uint16_t mdbus_data, bool rx, uint16_t* destino) {
+  MsgModbus msg = {mdbus_id, reg, chat_id, mdbus_data, rx, destino};
+  colaModbus.push(msg); 
+}
 
 void colaMsj(String chat_id, String texto) {
   MensajeTelegram msg = { chat_id, texto };
   colaMensajes.push(msg);
 }
 
+
+void procesarMsgMdBus() {
+  unsigned long startProcessing = millis();
+  // Limit processing time or number of messages per cycle
+  while (!colaModbus.empty() && (millis() - startProcessing < 100)) { // Example: Process for up to 100ms
+      MsgModbus msg = colaModbus.front();
+      colaModbus.pop();
+      if (msg.rx) {
+          leerDatoModbus( msg.mdbus_id, msg.reg, msg.chat_id, msg.destino);
+      } else {
+          enviarDatoModbus(msg.mdbus_id, msg.reg, msg.mdbus_data, msg.chat_id);
+      }
+       yield(); // Maybe not needed here if modbus calls yield internally
+  }
+}
+
+/*void procesarMsgMdBus() {
+  if (!colaModbus.empty() ) {
+    MsgModbus msg = colaModbus.front();
+    colaModbus.pop();
+    if (msg.rx) {
+      leerDatoModbus( msg.mdbus_id, msg.reg, msg.chat_id, msg.destino);
+    } else {
+      enviarDatoModbus(msg.mdbus_id, msg.reg, msg.mdbus_data, msg.chat_id);
+    }
+  }
+}*/
+
 void procesarMensajesTelegram() {
+  unsigned long startProcessing = millis();
+  // Limit processing time or number of messages per cycle to avoid blocking too long
+  while (!colaMensajes.empty() && (millis() - startProcessing < 500)) { // Example: Process for up to 500ms
+    MensajeTelegram msg = colaMensajes.front();
+    colaMensajes.pop();
+    bot.sendMessage(msg.chat_id, msg.texto, "");
+    // Optional: Add a small delay if hitting Telegram rate limits
+     delay(20); // Adjust as needed
+    yield(); // Allow background tasks between sends
+  }
+}
+
+/*void procesarMensajesTelegram() {
   if (!colaMensajes.empty() ) {
     MensajeTelegram msg = colaMensajes.front();
     colaMensajes.pop();
     bot.sendMessage(msg.chat_id, msg.texto, "");
   }
-}
+}*/
 
 void handleNewMessages(int numNewMessages) {
   for (int i = 0; i < numNewMessages; i++) {
     updateId = bot.messages[i].update_id;
-
     if (updateId <= lastUpdateId) {
       continue;
     }
-    
     String text = bot.messages[i].text;
     String fromName = bot.messages[i].from_name;
     String chat_id = bot.messages[i].chat_id;
-
     //Serial.println("Mensaje recibido de " + fromName + ": " + text);
-    colaMsj(chat_id, "Recibido: " + text );
-
+    //colaMsj(chat_id, "Recibido: " + text );
     processCommand(text, chat_id);
   }
 }
@@ -266,11 +307,13 @@ void processWriteCommand(String argument, String chat_id) {
   uint16_t modbusAddress = (uint16_t) addressStr.toInt();
   int modbusValue        = valueStr.toInt();
   
-  enviarDatoModbus(wrtcmd_id, modbusAddress, modbusValue, chat_id);
+  //enviarDatoModbus(wrtcmd_id, modbusAddress, modbusValue, chat_id);
+  colaMb(wrtcmd_id, modbusAddress, chat_id, modbusValue, false );
 }
 
 void processReadCommand(String argument, String chat_id) {
   // Se espera que 'argument' tenga el formato: "<modbus_id> <registro>"
+  
   int spaceIndex = argument.indexOf(' ');
   if (spaceIndex == -1) {
     colaMsj(chat_id, "Error: Formato incorrecto. Usa /read <modbus_id> <registro>");
@@ -285,7 +328,8 @@ void processReadCommand(String argument, String chat_id) {
   uint16_t registro = regStr.toInt();        // Por ejemplo, "4097"
   
   // Llamar a la función leerDatoModbus con el modbus_id y el registro correspondiente
-  leerDatoModbus((uint8_t)rdcmd_id, (uint16_t)registro, chat_id);
+  //leerDatoModbus((uint8_t)rdcmd_id, (uint16_t)registro, chat_id);
+  colaMb(rdcmd_id, registro, chat_id, 0, true, &param);
 }
 
 void processModoATSCommand(String argument, String chat_id) {
@@ -298,6 +342,7 @@ void processModoATSCommand(String argument, String chat_id) {
    colaMsj(chat_id, "ATS en modo " + argument );
 }
 }
+
 
 // Nueva función para procesar solo la selección de bomba activa
 void processBombaCommand(String argument, String chat_id) {
@@ -375,7 +420,7 @@ void processBombaCommand(String argument, String chat_id) {
     mensaje += "• Disponible: " + String(bombas[(bomba_id-1)].dis ? "SÍ ✅" : "NO ❌") + "\n";
     mensaje += "• Marcha: " + String(bombas[(bomba_id-1)].marcha ? "ACTIVA 🟢" : "DETENIDA 🔴") + "\n";
     mensaje += "• Conexión: " + String(bombas[(bomba_id-1)].enc ? "ESTABLECIDA 📡" : "FALLIDA ⚠️") + "\n";
-    mensaje += "• Velocidad: " + String(bombas[(bomba_id-1)].vel) + " %";
+    mensaje += "• Velocidad: " + String(bombas[(bomba_id-1)].vel / 50.0 ,1) + " %";
 
     colaMsj(chat_id, mensaje);
   }
@@ -395,7 +440,7 @@ void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String
    
    modbus.writeHreg(edmb_id, registro, valor);
 
-   while (millis() - startTime < 30) {
+   while (millis() - startTime < 60) {
      modbus.task();
      if (modbus.slave() == 0) {
        writeOk = true;
@@ -403,34 +448,43 @@ void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String
      }
      yield();      
    }  
-  
+  if (chat_id != "esp32") {
       String mensaje = writeOk ? "Dato enviado exitosamente." : "Error al enviar dato.";
         colaMsj(chat_id, mensaje);
-   
+  }
 }
 
-void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id) {
+void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id, uint16_t* destino) {
    uint16_t valorLeido = 0;
    readOk = false;
+   static bool iterUno = true;
    bombas[(ldmb_id-1)].enc = false;
    modbus.readHreg(ldmb_id, registro, &valorLeido);
    unsigned long inicio = millis();
  
-  // espera 45 ms a que se desocupe la comunicacion
-    while (millis() - inicio < 30  ) {
+  // espera 50 ms a que se desocupe la comunicacion
+    while ((millis() - inicio) < 60 || !readOk ) {
       modbus.task();
        if (modbus.slave() == 0) {
+          if (iterUno)  break;
           readOk = true;
           bombas[(ldmb_id-1)].enc = true;
-          break;
+          param = valorLeido ;
+          if (destino != nullptr) *destino = valorLeido;
+          bombas[(ldmb_id-1)].vel = valorLeido;
        }
+       iterUno = false;
        yield();
     }
-     param = valorLeido ;
-     
+     if ( !readOk ) {     
+         if (destino != nullptr) *destino = 0;
+         bombas[(ldmb_id-1)].vel = 0;
+         bombas[(ldmb_id-1)].enc = false;
+     }
+     if (chat_id != "esp32") {
        String mensaje = readOk ? "Valor leído: " + String(param) : "Timeout alcanzado. El variador no responde.";
        colaMsj(chat_id, mensaje);
-      
+     }  
    } 
    
   /*
@@ -464,17 +518,17 @@ void updateFirmware(String url, String chat_id) {
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
-      Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+      //Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
       colaMsj(chat_id, "Error en la actualización de firmware.");
       break;
 
     case HTTP_UPDATE_NO_UPDATES:
-      Serial.println("HTTP_UPDATE_NO_UPDATES");
+      //Serial.println("HTTP_UPDATE_NO_UPDATES");
       colaMsj(chat_id, "No hay actualizaciones disponibles.");
       break;
 
     case HTTP_UPDATE_OK:
-      Serial.println("HTTP_UPDATE_OK");
+      //Serial.println("HTTP_UPDATE_OK");
       colaMsj(chat_id, "Actualización completada. Reiniciando...");
       updatedRecently = true;
       delay(1000);
@@ -504,10 +558,10 @@ LOK = OOK = GOK = Gon = false;
 Gon = false;
                                             //if (setATS != modoATS) {
 if (modoATS == "Auto") {
-  if ((CicloATS == 200) & (Gok)) {
+  if ((CicloATS == 200) && (Gok)) {
       tInicio = millis();
       CicloATS = 80;
-    } else if ((CicloATS == 300) & (Lok)) {
+    } else if ((CicloATS == 300) && (Lok)) {
       tInicio = millis();
       CicloATS = 20;
     } else  {
@@ -900,21 +954,17 @@ void evaluarEstado() {
   }
 }
 
-void leeVelocidad(int i) {
+/*void leeVelocidad(int i) {
   if (i < 0 || i > 2) return;
 
   uint8_t lv_id = i + 1;
-  leerDatoModbus(lv_id, 4097, "esp32");
-
-  if (readOk) {
-    bombas[i].vel = param;
-  } else {
-    bombas[i].vel = 0;
-  }
-}
+  //leerDatoModbus(lv_id, 4097, "esp32");
+  colaMb(lv_id, 4097, "esp32", 0, true);
+}*/
 
 void procesarVelocidad() {
   static int bombaIndex = 0;
+  static bool RXnotTX = true;
   static uint16_t sumaVel = 0;
   static uint8_t bombasEnc = 0;
  // static unsigned long ultimaLectura = 0;
@@ -922,26 +972,26 @@ void procesarVelocidad() {
 
  // if (millis() - ultimaLectura >= intervalo) {
  //   ultimaLectura = millis();
-
-    if (bombaIndex < 3) {
-      leeVelocidad(bombaIndex);
-
-      if (readOk && bombas[bombaIndex].marcha) {
-        sumaVel += bombas[bombaIndex].vel;
-        bombasEnc++;
-      }
-
-      bombaIndex++;
-    } else {
+    if (bombaIndex == 3) {
       // Se completaron las 3 lecturas
       vel = (bombasEnc > 0) ? (sumaVel / bombasEnc) : 0;
-
-      // Reiniciar para la próxima serie de lecturas
-      bombaIndex = 0;
       sumaVel = 0;
       bombasEnc = 0;
+      bombaIndex = 0;
+      RXnotTX = true;
     }
- // }
+    if (RXnotTX) {
+      colaMb((bombaIndex + 1), 4097, "esp32", 0, true,  &bombas[bombaIndex].vel);
+          RXnotTX = false;
+      } else {
+        if (bombas[bombaIndex].enc && bombas[bombaIndex].marcha) {
+          sumaVel += bombas[bombaIndex].vel;
+          bombasEnc++ ;
+        } 
+        colaMb((bombaIndex + 1), 8192, "esp32", bombas[bombaIndex].marcha ? 1 : 5, false );
+        RXnotTX = true;
+        bombaIndex++;
+      }
 }
 
 
@@ -1059,8 +1109,10 @@ void setPresion(int presionx10) {
   int valorpx100 = (setpresionx10 * 8 ) + 200; 
   for (int i = 0; i < 3; i++) {
     if (bombas[i].enc) {
-      enviarDatoModbus((i+1), 62738, (valorpx100 - 20), "esp32");
-      enviarDatoModbus((i+1), 62740, (valorpx100 + 20), "esp32");
+      //enviarDatoModbus((i+1), 62738, (valorpx100 - 20), "esp32");
+      //enviarDatoModbus((i+1), 62740, (valorpx100 + 20), "esp32");
+      colaMb((i+1), 62738, "esp32", (valorpx100 - 20), false);
+      colaMb((i+1), 62740, "esp32", (valorpx100 + 20), false);
     } 
   }
  }
@@ -1074,6 +1126,7 @@ void telegramMsg() {
   }
 }
 
+/*
 bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data) {
   Serial.printf("Request result: 0x%02X\n", event);
   if (event == Modbus::EX_SUCCESS) {
@@ -1091,3 +1144,4 @@ void marchaBombas() {
     //bombas[i].enc = writeOk;
   }
 }
+*/

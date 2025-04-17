@@ -10,7 +10,7 @@
 #include "variables.h"
 
 unsigned long lastTelegramCheck = 0;
-const unsigned long intervaloTelegram = 2000; // cada 2 segundos
+const unsigned long intervaloTelegram = 500; // cada 1.5 segundos
 
 void setup() {
 //  Serial.begin(115200);
@@ -21,9 +21,9 @@ void setup() {
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1500);
-    Serial.print(".");
+    //Serial.print(".");
   }
-  Serial.println("\nConectado a WiFi con IP: " + WiFi.localIP().toString());
+  //Serial.println("\nConectado a WiFi con IP: " + WiFi.localIP().toString());
 
   client.setInsecure();
   inicializarEntradasSalidas();
@@ -48,33 +48,33 @@ void setup() {
 }
 
 void loop() {
-
-
-  
-  controlarLedWiFi();
-  
+ 
   // Ejecutar el motor de Modbus lo más seguido posible
   modbus.task();
+  
 
   unsigned long currentTime = millis();
 
-  // Lógica de actualización periódica (cada 200 ms)
-  if (currentTime - lastUpdateTime >= 200) {
+  // Lógica de actualización periódica (cada 60 ms)
+  if (currentTime - lastUpdateTime >= 250) {
     lastUpdateTime = currentTime;
-    
-    leerEntradas();
-    procesarVelocidad();
-    gestionATS();
-    gestionGrupo();
-    controlBombas();
+    controlarLedWiFi(); yield();
+    procesarMsgMdBus(); yield();
+    leerEntradas(); yield();
+    procesarVelocidad(); yield();
+
+    gestionATS(); yield();
+    gestionGrupo(); yield();
+    controlBombas(); yield();
     actualizarSalidas();
-    marchaBombas();
+    //marchaBombas();
+     procesarMensajesTelegram();  yield();
   }
 
-  // Revisión de Telegram cada 2 segundos
+  // Revisión de Telegram cada 1.5 segundos
   if (currentTime - lastTelegramCheck >= intervaloTelegram) {
     lastTelegramCheck = currentTime;
-    procesarMensajesTelegram();
+    //procesarMensajesTelegram();
     telegramMsg();
   }
 

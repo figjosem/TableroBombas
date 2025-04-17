@@ -11,10 +11,11 @@ IPAddress subnet(255, 255, 255, 0);
 IPAddress primaryDNS(8, 8, 8, 8);
 IPAddress secondaryDNS(8, 8, 4, 4);
 
-unsigned long lastUpdateTime = 0; // Variable para controlar el tiempo
+unsigned long lastUpdateTime = millis(); // Variable para controlar el tiempo
 
 
 std::queue<MensajeTelegram> colaMensajes;
+std::queue<MsgModbus> colaModbus;
 
 const String BOTtoken = "8141829096:AAEOBTq9R9oluiCmetI4RcZPZQSYxI0fYrg";
 WiFiClientSecure client;

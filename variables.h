@@ -8,8 +8,17 @@ struct MensajeTelegram {
   String texto;
 };
 
-extern std::queue<MensajeTelegram> colaMensajes;
+struct MsgModbus {
+  uint8_t mdbus_id;
+  uint16_t reg;
+  String chat_id ;
+  uint16_t mdbus_data;
+  bool rx;
+  uint16_t* destino;
+};
 
+extern std::queue<MensajeTelegram> colaMensajes;
+extern std::queue<MsgModbus> colaModbus;
 
 #include <Arduino.h>
 #include <WiFi.h>
