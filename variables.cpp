@@ -15,13 +15,13 @@ unsigned long lastUpdateTime = millis(); // Variable para controlar el tiempo
 
 
 std::queue<MensajeTelegram> colaMensajes;
-std::queue<MsgModbus> colaModbus;
+//std::queue<MsgModbus> colaModbus;
 
 const String BOTtoken = "8141829096:AAEOBTq9R9oluiCmetI4RcZPZQSYxI0fYrg";
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-ModbusRTU modbus ;//(&Serial1, RE_PIN);      // Reemplazar ModbusMaster node; ModbusMaster node;
+ModbusRTU mb ;//(&Serial1, RE_PIN);      // Reemplazar ModbusMaster node; ModbusMaster node;
 
 bool updatedRecently = false;
 const int updateDelay = 10000;

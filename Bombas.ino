@@ -14,6 +14,7 @@ const unsigned long intervaloTelegram = 500; // cada 1.5 segundos
 
 void setup() {
 //  Serial.begin(115200);
+  EEPROM.begin(512);
   actualizarSalidas();
   if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
 //    Serial.println("Error al configurar IP estática.");
@@ -29,8 +30,9 @@ void setup() {
   inicializarEntradasSalidas();
   pinMode(RE_PIN, OUTPUT);
   Serial1.begin(19200, SERIAL_8N1, RX_PIN, TX_PIN);
-  modbus.begin(&Serial1, RE_PIN); // RE_PIN controla RE/DE
-  modbus.master(); // Establecer como maestro
+  mb.begin(&Serial1, RE_PIN); // RE_PIN controla RE/DE
+  //mb.master(); // Establecer como maestro
+  //mb.setTimeout(2000);
   //modbus.setTimeoutValue(50); // 50ms timeout
   //modbus.setTimeOutValue(100);  // Timeout de 1000 ms (1 segundo)
   
@@ -50,7 +52,7 @@ void setup() {
 void loop() {
  
   // Ejecutar el motor de Modbus lo más seguido posible
-  modbus.task();
+  mb.task();
   
 
   unsigned long currentTime = millis();
@@ -59,7 +61,7 @@ void loop() {
   if (currentTime - lastUpdateTime >= 250) {
     lastUpdateTime = currentTime;
     controlarLedWiFi(); yield();
-    procesarMsgMdBus(); yield();
+   // procesarMsgMdBus(); yield();
     leerEntradas(); yield();
     procesarVelocidad(); yield();
 

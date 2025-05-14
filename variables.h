@@ -1,6 +1,12 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
 #include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <UniversalTelegramBot.h>
+#include <ModbusRTU.h>
+#include <HTTPUpdate.h>
+#include <EEPROM.h>
 #include <queue>
 
 struct MensajeTelegram {
@@ -8,25 +14,18 @@ struct MensajeTelegram {
   String texto;
 };
 
-struct MsgModbus {
+/*struct MsgModbus {
   uint8_t mdbus_id;
   uint16_t reg;
   String chat_id ;
   uint16_t mdbus_data;
   bool rx;
   uint16_t* destino;
-};
+};*/
 
 extern std::queue<MensajeTelegram> colaMensajes;
-extern std::queue<MsgModbus> colaModbus;
+//extern std::queue<MsgModbus> colaModbus;
 
-#include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <UniversalTelegramBot.h>
-#include <ModbusRTU.h>
-#include <HTTPUpdate.h>
-#include <EEPROM.h>
 
 // Pines 74HC595
 #define DATA_595 13
@@ -47,7 +46,7 @@ extern std::queue<MsgModbus> colaModbus;
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12.13"
+#define VERSION "7.12.14"
 
 extern const char* ssid;
 extern const char* password;
@@ -64,7 +63,7 @@ extern unsigned long tiempoActual ;
 extern const String BOTtoken;
 extern WiFiClientSecure client;
 extern UniversalTelegramBot bot;
-extern ModbusRTU modbus; // Declaración externa
+extern ModbusRTU mb; // Declaración externa
 //extern ModbusMaster node;
 extern  uint16_t param;
 extern bool readOk;
@@ -105,12 +104,15 @@ extern bool LOK;
 extern bool Gon;
 extern bool Bok;
 extern bool respuesta;
-extern volatile bool lecturaCompleta;
-extern volatile uint16_t registroLeido ;
+//extern volatile bool lecturaCompleta;
+//extern volatile uint16_t registroLeido ;
+
 // Declaración del callback
-extern bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data);
-
-
+extern bool cbWrite(uint16_t event, uint16_t transactionId, void* data);
+extern bool cbRead(uint16_t event, uint16_t transactionId, void* data);
+extern uint16_t valor_leido;
+extern bool read_success;
+extern bool write_success;
 
 extern int CicloATS;
 extern int cicloGrupo;

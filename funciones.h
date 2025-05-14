@@ -13,9 +13,9 @@ uint16_t read165();
 void updateLedStatus(bool wifiConnected);
 
 void colaMsj(String chat_id, String texto);
-void colaMb(uint8_t mdbus_id, uint16_t reg, String chat_id, uint16_t mdbus_data, bool rx, uint16_t* destino = nullptr);
+//void colaMb(uint8_t mdbus_id, uint16_t reg, String chat_id, uint16_t mdbus_data, bool rx, uint16_t* destino = nullptr);
 void procesarMensajesTelegram();
-void procesarMsgMdBus(); 
+//void procesarMsgMdBus(); 
 // Funciones principales
 //void preTransmission();
 //void postTransmission();
