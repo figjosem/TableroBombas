@@ -46,7 +46,13 @@ extern std::queue<MensajeTelegram> colaMensajes;
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12.14"
+#define VERSION "7.12.15"
+
+// Funciones para eModbus
+
+extern String lastChatId ;
+extern unsigned long modbusStartTime ;
+extern bool modbusWaiting ;
 
 extern const char* ssid;
 extern const char* password;

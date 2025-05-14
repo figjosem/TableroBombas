@@ -13,6 +13,10 @@ IPAddress secondaryDNS(8, 8, 4, 4);
 
 unsigned long lastUpdateTime = millis(); // Variable para controlar el tiempo
 
+// Funciones para eModbus
+String lastChatId = "esp32";  // chat_id por defecto para diferenciar origen
+unsigned long modbusStartTime = 0;
+bool modbusWaiting = false;
 
 std::queue<MensajeTelegram> colaMensajes;
 //std::queue<MsgModbus> colaModbus;

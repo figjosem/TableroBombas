@@ -31,7 +31,7 @@ void setup() {
   pinMode(RE_PIN, OUTPUT);
   Serial1.begin(19200, SERIAL_8N1, RX_PIN, TX_PIN);
   mb.begin(&Serial1, RE_PIN); // RE_PIN controla RE/DE
-  //mb.master(); // Establecer como maestro
+  mb.master(); // Establecer como maestro
   //mb.setTimeout(2000);
   //modbus.setTimeoutValue(50); // 50ms timeout
   //modbus.setTimeOutValue(100);  // Timeout de 1000 ms (1 segundo)
@@ -53,7 +53,12 @@ void loop() {
  
   // Ejecutar el motor de Modbus lo más seguido posible
   mb.task();
-  
+  if (modbusWaiting && millis() - modbusStartTime > 100) {
+        modbusWaiting = false;
+        if (lastChatId != "esp32") {
+            bot.sendMessage(lastChatId, "Timeout al intentar comunicarse con el esclavo.", "");
+        }
+    }
 
   unsigned long currentTime = millis();
 

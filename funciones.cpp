@@ -1115,13 +1115,12 @@ void telegramMsg() {
   }
 }
 
-// Funciones para eModbus
 
-String lastChatId = "esp32";  // chat_id por defecto para diferenciar origen
 
 // Callback para lectura asincrónica
 bool cbRead(Modbus::ResultCode event, uint16_t transactionId, void* data) {
     bot.sendMessage(lastChatId, "Se ejecuta cbRead", "");
+    modbusWaiting = false;
     if (event == Modbus::EX_SUCCESS && data != nullptr) {
         param = *(uint16_t*)data;
         readOk = true;
@@ -1141,13 +1140,20 @@ bool cbRead(Modbus::ResultCode event, uint16_t transactionId, void* data) {
 
 // Callback para escritura asincrónica
 bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data) {
+    modbusWaiting = false;
     writeOk = (event == Modbus::EX_SUCCESS);
+    if (lastChatId != "esp32") {
+        String mensaje = writeOk ? "Escritura exitosa." : "Error en la escritura.";
+        bot.sendMessage(lastChatId, mensaje, "");
+    }
     return true;
 }
 
 void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String chat_id) {
     writeOk = false;
     lastChatId = chat_id;
+    modbusWaiting = true;
+    modbusStartTime = millis();
     mb.writeHreg(edmb_id, registro, &valor, 1, static_cast<bool (*)(Modbus::ResultCode, uint16_t, void*)>(cbWrite));
 }
 
@@ -1155,15 +1161,14 @@ void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id, uint16_t
     readOk = false;
     lastChatId = chat_id;
     bombas[(ldmb_id - 1)].enc = false;
-    static uint16_t tempBuffer; // Declaración aquí dentro de la función
+    static uint16_t tempBuffer;
     uint16_t* target = destino ? destino : &tempBuffer;
+    modbusWaiting = true;
+    modbusStartTime = millis();
     mb.readHreg(ldmb_id, registro, target, 1, static_cast<bool (*)(Modbus::ResultCode, uint16_t, void*)>(cbRead));
 }
 
-void procesarMsgMdBus() {
-    // Ahora que usamos eModbus asincrónico, eliminamos el uso de la colaModbus
-    // Este método queda vacío o puede eliminarse si ya no se invoca desde loop()
-}
+
 
 void setPresion(int presionx10) {
     int setpresionx10 = presionx10;
