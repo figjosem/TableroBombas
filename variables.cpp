@@ -14,9 +14,11 @@ IPAddress secondaryDNS(8, 8, 4, 4);
 unsigned long lastUpdateTime = millis(); // Variable para controlar el tiempo
 
 // Funciones para eModbus
-String lastChatId = "esp32";  // chat_id por defecto para diferenciar origen
-unsigned long modbusStartTime = 0;
+
+String lastChatId = "esp32";
+uint32_t lastToken = 0;
 bool modbusWaiting = false;
+unsigned long modbusStartTime = 0;
 
 std::queue<MensajeTelegram> colaMensajes;
 //std::queue<MsgModbus> colaModbus;
@@ -25,7 +27,7 @@ const String BOTtoken = "8141829096:AAEOBTq9R9oluiCmetI4RcZPZQSYxI0fYrg";
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-ModbusRTU mb ;//(&Serial1, RE_PIN);      // Reemplazar ModbusMaster node; ModbusMaster node;
+ModbusClientRTU mb(RE_PIN) ;//(&Serial1, RE_PIN);      // Reemplazar ModbusMaster node; ModbusMaster node;
 
 bool updatedRecently = false;
 const int updateDelay = 10000;

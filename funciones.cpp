@@ -1117,66 +1117,43 @@ void telegramMsg() {
 
 
 
-// Callback para lectura asincrónica
-bool cbRead(Modbus::ResultCode event, uint16_t transactionId, void* data) {
-    bot.sendMessage(lastChatId, "Se ejecuta cbRead", "");
-    modbusWaiting = false;
-    if (event == Modbus::EX_SUCCESS && data != nullptr) {
-        param = *(uint16_t*)data;
-        readOk = true;
-        if (lastChatId != "esp32") {
-            String mensaje = "Valor leído: " + String(param);
-            bot.sendMessage(lastChatId, mensaje, "");
-        }
-    } else {
-        param = 0;
-        readOk = false;
-        if (lastChatId != "esp32") {
-            bot.sendMessage(lastChatId, "Error al leer el valor del esclavo.", "");
-        }
-    }
-    return true;
-}
 
-// Callback para escritura asincrónica
-bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data) {
-    modbusWaiting = false;
-    writeOk = (event == Modbus::EX_SUCCESS);
-    if (lastChatId != "esp32") {
-        String mensaje = writeOk ? "Escritura exitosa." : "Error en la escritura.";
-        bot.sendMessage(lastChatId, mensaje, "");
-    }
-    return true;
-}
 
-void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String chat_id) {
-    writeOk = false;
-    lastChatId = chat_id;
+void enviarDatoModbus(uint8_t id, uint16_t reg, uint16_t valor, String chat_id) {
+    lastToken = chat_id != "esp32" ? chat_id.toInt() : 0;
     modbusWaiting = true;
     modbusStartTime = millis();
-    mb.writeHreg(edmb_id, registro, &valor, 1, static_cast<bool (*)(Modbus::ResultCode, uint16_t, void*)>(cbWrite));
+    mb.addRequest(lastToken, id, WRITE_HOLD_REGISTER, reg, valor);
 }
 
-void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id, uint16_t* destino) {
-    readOk = false;
-    lastChatId = chat_id;
-    bombas[(ldmb_id - 1)].enc = false;
-    static uint16_t tempBuffer;
-    uint16_t* target = destino ? destino : &tempBuffer;
+void leerDatoModbus(uint8_t id, uint16_t reg, String chat_id, uint16_t* destino ) {
+    lastToken = chat_id != "esp32" ? chat_id.toInt() : 0;
     modbusWaiting = true;
     modbusStartTime = millis();
-    mb.readHreg(ldmb_id, registro, target, 1, static_cast<bool (*)(Modbus::ResultCode, uint16_t, void*)>(cbRead));
+    mb.addRequest(lastToken, id, READ_HOLD_REGISTER, reg, 1);
 }
 
 
 
 void setPresion(int presionx10) {
-    int setpresionx10 = presionx10;
-    int valorpx100 = (setpresionx10 * 8 ) + 200;
+    int valorpx100 = (presionx10 * 8) + 200;
     for (int i = 0; i < 3; i++) {
         if (bombas[i].enc) {
             enviarDatoModbus((i + 1), 62738, (valorpx100 - 20), "esp32");
             enviarDatoModbus((i + 1), 62740, (valorpx100 + 20), "esp32");
         }
+    }
+}
+
+// Callback general para todas las respuestas Modbus
+void handleData(ModbusMessage response, uint32_t token) {
+    bot.sendMessage(String(token), "HandleData ok" , "");
+    modbusWaiting = false;
+    uint16_t val;
+    if (response.getError() == SUCCESS) {
+        response.get(2, val); // offset 2 (func + address)
+        if (token != 0) bot.sendMessage(String(token), "Valor leído: " + String(val), "");
+    } else {
+        if (token != 0) bot.sendMessage(String(token), "Error Modbus: " + String(response.getError(), HEX), "");
     }
 }

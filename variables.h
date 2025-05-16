@@ -4,7 +4,7 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
-#include <ModbusRTU.h>
+#include <ModbusClientRTU.h>
 #include <HTTPUpdate.h>
 #include <EEPROM.h>
 #include <queue>
@@ -51,8 +51,10 @@ extern std::queue<MensajeTelegram> colaMensajes;
 // Funciones para eModbus
 
 extern String lastChatId ;
-extern unsigned long modbusStartTime ;
+extern uint32_t lastToken ;
 extern bool modbusWaiting ;
+extern unsigned long modbusStartTime;
+
 
 extern const char* ssid;
 extern const char* password;
@@ -69,7 +71,7 @@ extern unsigned long tiempoActual ;
 extern const String BOTtoken;
 extern WiFiClientSecure client;
 extern UniversalTelegramBot bot;
-extern ModbusRTU mb; // Declaración externa
+extern ModbusClientRTU mb; // Declaración externa
 //extern ModbusMaster node;
 extern  uint16_t param;
 extern bool readOk;
@@ -114,8 +116,8 @@ extern bool respuesta;
 //extern volatile uint16_t registroLeido ;
 
 // Declaración del callback
-extern bool cbWrite(uint16_t event, uint16_t transactionId, void* data);
-extern bool cbRead(uint16_t event, uint16_t transactionId, void* data);
+//extern bool cbWrite(uint16_t event, uint16_t transactionId, void* data);
+//extern bool cbRead(uint16_t event, uint16_t transactionId, void* data);
 extern uint16_t valor_leido;
 extern bool read_success;
 extern bool write_success;

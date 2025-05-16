@@ -1,7 +1,7 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
-#include <ModbusRTU.h> // Reemplazar ModbusMaster.h #include <ModbusMaster.h>
+#include <ModbusClientRTU.h> // Reemplazar ModbusMaster.h #include <ModbusMaster.h>
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
 #include <EEPROM.h>
@@ -30,11 +30,14 @@ void setup() {
   inicializarEntradasSalidas();
   pinMode(RE_PIN, OUTPUT);
   Serial1.begin(19200, SERIAL_8N1, RX_PIN, TX_PIN);
-  mb.begin(&Serial1, RE_PIN); // RE_PIN controla RE/DE
-  mb.master(); // Establecer como maestro
-  //mb.setTimeout(2000);
-  //modbus.setTimeoutValue(50); // 50ms timeout
-  //modbus.setTimeOutValue(100);  // Timeout de 1000 ms (1 segundo)
+  mb.begin(Serial1); // RE_PIN controla RE/DE
+ // mb.master(); // Establecer como maestro
+ //  mb.onDataHandler(&handleData);
+  // - provide onError handler function
+ // mb.onErrorHandler(&handleError);
+  // Set message timeout to 2000ms
+  mb.setTimeout(2000);
+
   
   
   //node.begin(1, Serial1);  // Slave ID 1
@@ -52,7 +55,7 @@ void setup() {
 void loop() {
  
   // Ejecutar el motor de Modbus lo más seguido posible
-  mb.task();
+  //mb.task();
   if (modbusWaiting && millis() - modbusStartTime > 100) {
         modbusWaiting = false;
         if (lastChatId != "esp32") {
