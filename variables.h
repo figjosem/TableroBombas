@@ -1,6 +1,12 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
 #include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <UniversalTelegramBot.h>
+#include <NonBlockingModbusMaster.h> //#include <ModbusRTU.h>
+#include <HTTPUpdate.h>
+#include <EEPROM.h>
 #include <queue>
 
 struct MensajeTelegram {
@@ -20,13 +26,6 @@ struct MsgModbus {
 extern std::queue<MensajeTelegram> colaMensajes;
 extern std::queue<MsgModbus> colaModbus;
 
-#include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <UniversalTelegramBot.h>
-#include <ModbusRTU.h>
-#include <HTTPUpdate.h>
-#include <EEPROM.h>
 
 // Pines 74HC595
 #define DATA_595 13
@@ -39,7 +38,7 @@ extern std::queue<MsgModbus> colaModbus;
 #define LOAD_165 16
 #define CLOCK_165 17
 
-#define RE_PIN 22
+#define RE_PIN 22 
 #define TX_PIN 1
 #define RX_PIN 3
 
@@ -64,8 +63,11 @@ extern unsigned long tiempoActual ;
 extern const String BOTtoken;
 extern WiFiClientSecure client;
 extern UniversalTelegramBot bot;
-extern ModbusRTU modbus; // Declaración externa
-//extern ModbusMaster node;
+extern NonBlockingModbusMaster mb; // NonBlockingModbusMaster
+extern bool modbusBusy ;
+extern MsgModbus currentMsg;
+
+
 extern  uint16_t param;
 extern bool readOk;
 extern bool writeOk;
@@ -108,7 +110,7 @@ extern bool respuesta;
 extern volatile bool lecturaCompleta;
 extern volatile uint16_t registroLeido ;
 // Declaración del callback
-extern bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data);
+//extern bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data);
 
 
 

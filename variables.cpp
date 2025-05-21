@@ -21,7 +21,9 @@ const String BOTtoken = "8141829096:AAEOBTq9R9oluiCmetI4RcZPZQSYxI0fYrg";
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-ModbusRTU modbus ;//(&Serial1, RE_PIN);      // Reemplazar ModbusMaster node; ModbusMaster node;
+NonBlockingModbusMaster mb; ;//(&Serial1, RE_PIN);      // Reemplazar ModbusMaster node; ModbusMaster node;
+bool modbusBusy = false;
+MsgModbus currentMsg;
 
 bool updatedRecently = false;
 const int updateDelay = 10000;

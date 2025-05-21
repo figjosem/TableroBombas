@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+class NonBlockingModbusMaster;
+
 // Funciones de entradas y salidas
 void init595();
 void write595(uint16_t data);
@@ -15,6 +17,7 @@ void updateLedStatus(bool wifiConnected);
 void colaMsj(String chat_id, String texto);
 void colaMb(uint8_t mdbus_id, uint16_t reg, String chat_id, uint16_t mdbus_data, bool rx, uint16_t* destino = nullptr);
 void procesarMensajesTelegram();
+void handleModbusResult(NonBlockingModbusMaster &modbus);
 void procesarMsgMdBus(); 
 // Funciones principales
 //void preTransmission();
@@ -26,8 +29,8 @@ void processReadCommand(String argument, String chat_id);
 void processModoATSCommand(String argument, String chat_id);
 void processBombaCommand(String argument, String chat_id);
 void processUpdateCommand(String url, String chat_id);
-void enviarDatoModbus(uint8_t evmb_id, uint16_t registro, uint16_t valor, String chat_id);
-void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id, uint16_t* destino = nullptr);
+//void enviarDatoModbus(uint8_t evmb_id, uint16_t registro, uint16_t valor, String chat_id);
+//void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id, uint16_t* destino = nullptr);
 void updateFirmware(String url, String chat_id);
 void saveLastUpdateId(uint32_t uId);
 uint32_t loadLastUpdateId();

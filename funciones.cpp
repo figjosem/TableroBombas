@@ -142,18 +142,24 @@ void colaMsj(String chat_id, String texto) {
 }
 
 
+// 3. Modificar la función de procesamiento de mensajes
 void procesarMsgMdBus() {
-  unsigned long startProcessing = millis();
-  // Limit processing time or number of messages per cycle
-  while (!colaModbus.empty() && (millis() - startProcessing < 100)) { // Example: Process for up to 100ms
-      MsgModbus msg = colaModbus.front();
-      colaModbus.pop();
-      if (msg.rx) {
-          leerDatoModbus( msg.mdbus_id, msg.reg, msg.chat_id, msg.destino);
-      } else {
-          enviarDatoModbus(msg.mdbus_id, msg.reg, msg.mdbus_data, msg.chat_id);
-      }
-       yield(); // Maybe not needed here if modbus calls yield internally
+  if(!modbusBusy && !colaModbus.empty()) {
+    currentMsg = colaModbus.front();
+    colaModbus.pop();
+    
+    modbusBusy = true;
+    
+    if(currentMsg.rx) {
+      mb.readHoldingRegisters(currentMsg.mdbus_id, currentMsg.reg, 1, handleModbusResult);
+    } else {
+      mb.writeSingleRegister(currentMsg.mdbus_id, currentMsg.reg, currentMsg.mdbus_data, handleModbusResult);
+    }
+  }
+  
+  // Actualizar estado del Modbus
+  if(modbusBusy) {
+    mb.justFinished(); // Actualiza el estado interno
   }
 }
 
@@ -434,7 +440,7 @@ void processUpdateCommand(String url, String chat_id) {
   updateFirmware(url, chat_id);
 }
 
-void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String chat_id) {
+/*void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String chat_id) {
    unsigned long startTime = millis();
    writeOk = false;
    
@@ -459,7 +465,7 @@ void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id, uint16_t
    readOk = false;
    static bool iterUno = true;
    bombas[(ldmb_id-1)].enc = false;
-   modbus.readHreg(ldmb_id, registro, &valorLeido);
+   mb.addRequest(ldmb_id, registro, &valorLeido);
    unsigned long inicio = millis();
  
   // espera 50 ms a que se desocupe la comunicacion
@@ -485,7 +491,7 @@ void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id, uint16_t
        String mensaje = readOk ? "Valor leído: " + String(param) : "Timeout alcanzado. El variador no responde.";
        colaMsj(chat_id, mensaje);
      }  
-   } 
+   }*/ 
    
   /*
    if (!modbus.slave()) {
@@ -1126,22 +1132,36 @@ void telegramMsg() {
   }
 }
 
-/*
-bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data) {
-  Serial.printf("Request result: 0x%02X\n", event);
-  if (event == Modbus::EX_SUCCESS) {
-    registroLeido = *(uint16_t*)data; // Almacenar el valor leído
-    //Serial.printf("Valor del registro: %d\n", registroLeido);
-  } else {
-    //Serial.println("Error al leer el registro.");
+// Nueva función handler para resultados
+void handleModbusResult(NonBlockingModbusMaster &modbus) {
+   //borrar >
+  String mensaje = "Se envió: id>" + String(currentMsg.mdbus_id) +
+                 " reg>" + String(currentMsg.reg) +
+                 " data>" + String(currentMsg.mdbus_data) +
+                 " dest>" + String((uintptr_t)currentMsg.destino, HEX);  colaMsj(currentMsg.chat_id, mensaje);
+    // <borrar 
+  uint8_t error = modbus.getError();
+  bool success = (error == NonBlockingModbusMaster::ku8MBSuccess);
+  
+  if(currentMsg.rx) {
+    if(success) {
+      uint16_t valorLeido = modbus.getResponseBuffer(0);
+      if(currentMsg.destino != nullptr) *currentMsg.destino = valorLeido;
+      bombas[(currentMsg.mdbus_id-1)].vel = valorLeido;
+      bombas[(currentMsg.mdbus_id-1)].enc = true;
+    } else {
+      if(currentMsg.destino != nullptr) *currentMsg.destino = 0;
+      bombas[(currentMsg.mdbus_id-1)].vel = 0;
+      bombas[(currentMsg.mdbus_id-1)].enc = false;
+    }
   }
-  return true;
-}
-
-void marchaBombas() {
-  for (int i = 0; i < 3; i++) {
-    enviarDatoModbus((i+1), 8192, bombas[i].marcha ? 1 : 5, "esp32");
-    //bombas[i].enc = writeOk;
+  
+  if(currentMsg.chat_id != "esp32") {
+    String mensaje = success ? 
+      (currentMsg.rx ? "Valor leído: " + String(modbus.getResponseBuffer(0)) : "Dato enviado exitosamente.") : 
+      "Error en operación Modbus (" + String(error) + ")";
+    colaMsj(currentMsg.chat_id, mensaje);
   }
+  
+  modbusBusy = false; // Liberar para procesar siguiente mensaje
 }
-*/
