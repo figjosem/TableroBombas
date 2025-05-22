@@ -46,7 +46,7 @@ extern std::queue<MsgModbus> colaModbus;
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12.13"
+#define VERSION "7.12.16"
 
 extern const char* ssid;
 extern const char* password;

@@ -1138,7 +1138,8 @@ void handleModbusResult(NonBlockingModbusMaster &modbus) {
   String mensaje = "Se envió: id>" + String(currentMsg.mdbus_id) +
                  " reg>" + String(currentMsg.reg) +
                  " data>" + String(currentMsg.mdbus_data) +
-                 " dest>" + String((uintptr_t)currentMsg.destino, HEX);  colaMsj(currentMsg.chat_id, mensaje);
+                 " dest>" + String((uintptr_t)currentMsg.destino, HEX);  
+                 colaMsj(currentMsg.chat_id, mensaje);
     // <borrar 
   uint8_t error = modbus.getError();
   bool success = (error == NonBlockingModbusMaster::ku8MBSuccess);

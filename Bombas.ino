@@ -28,7 +28,7 @@ void setup() {
   inicializarEntradasSalidas();
   pinMode(RE_PIN, OUTPUT);
   Serial1.begin(19200, SERIAL_8N1, RX_PIN, TX_PIN);
-  mb.initialize(Serial1, 1824, 1824, RE_PIN, true, 1000);
+  mb.initialize(Serial1, 1824, 1824, RE_PIN, false, 1000);
 
 
   delay(updateDelay);
