@@ -5,6 +5,9 @@
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
 #include <EEPROM.h>
+#include <queue>
+
+
 
 #include "funciones.h"
 #include "variables.h"
@@ -31,6 +34,7 @@ void setup() {
   Serial1.begin(19200, SERIAL_8N1, RX_PIN, TX_PIN);
   modbus.begin(&Serial1, RE_PIN); // RE_PIN controla RE/DE
   modbus.master(); // Establecer como maestro
+  //modbus.onRequestSuccess(cbWrite);
   //modbus.setTimeoutValue(50); // 50ms timeout
   //modbus.setTimeOutValue(100);  // Timeout de 1000 ms (1 segundo)
   
@@ -54,13 +58,14 @@ void loop() {
   
 
   unsigned long currentTime = millis();
-
+  procesarMsgMdBus(); yield();
   // Lógica de actualización periódica (cada 60 ms)
-  if (currentTime - lastUpdateTime >= 250) {
+  if (currentTime - lastUpdateTime >= 200) {
     lastUpdateTime = currentTime;
     controlarLedWiFi(); yield();
-    procesarMsgMdBus(); yield();
+    //procesarMsgMdBus(); yield();
     leerEntradas(); yield();
+    modbus.task();
     procesarVelocidad(); yield();
 
     gestionATS(); yield();
@@ -69,12 +74,21 @@ void loop() {
     actualizarSalidas();
     //marchaBombas();
      procesarMensajesTelegram();  yield();
+     if (esperandoLectura) {
+      static bool x = false;
+      if (!x) { 
+        x = true;
+      } else {
+       esperandoLectura = false;
+       x = false;
+      }
+     }
   }
-
+  modbus.task();
   // Revisión de Telegram cada 1.5 segundos
   if (currentTime - lastTelegramCheck >= intervaloTelegram) {
     lastTelegramCheck = currentTime;
-    //procesarMensajesTelegram();
+    procesarMensajesTelegram();
     telegramMsg();
   }
 
@@ -82,4 +96,5 @@ void loop() {
     restart = false;
     ESP.restart();
   }
+  modbus.task();
 }

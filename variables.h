@@ -1,8 +1,14 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
-#include <Arduino.h>
-#include <queue>
 
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <UniversalTelegramBot.h>
+#include <ModbusRTU.h>
+#include <HTTPUpdate.h>
+#include <EEPROM.h>
+#include <queue>
+#include <Arduino.h>
 struct MensajeTelegram {
   String chat_id;
   String texto;
@@ -20,13 +26,9 @@ struct MsgModbus {
 extern std::queue<MensajeTelegram> colaMensajes;
 extern std::queue<MsgModbus> colaModbus;
 
-#include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <UniversalTelegramBot.h>
-#include <ModbusRTU.h>
-#include <HTTPUpdate.h>
-#include <EEPROM.h>
+extern unsigned long lastUpdateTime;
+extern uint16_t valorLeido;
+extern unsigned long inicioEstado;
 
 // Pines 74HC595
 #define DATA_595 13
@@ -57,9 +59,15 @@ extern IPAddress subnet;
 extern IPAddress primaryDNS;
 extern IPAddress secondaryDNS;
 
-extern unsigned long lastUpdateTime ; // Variable para controlar el tiempo
-extern unsigned long inicioEstado ;
-extern unsigned long tiempoActual ;
+// Estado global para escritura
+extern String lastChatWrite ;
+extern bool esperandoEscritura ;
+// Estado global para lectura
+extern String lastChatRead ;
+extern String lastChatId; //BORRAR
+extern uint16_t* destinoLectura ;
+extern bool esperandoLectura ;
+extern uint8_t bombaLecturaId ;
 
 extern const String BOTtoken;
 extern WiFiClientSecure client;
@@ -108,8 +116,10 @@ extern bool respuesta;
 extern volatile bool lecturaCompleta;
 extern volatile uint16_t registroLeido ;
 // Declaración del callback
-extern bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data);
-
+//extern bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data);
+extern volatile Modbus::ResultCode ultimaTransaccionEvent;
+extern volatile uint16_t ultimoValorLeido;
+extern volatile bool callbackLlamado;
 
 
 extern int CicloATS;
@@ -142,3 +152,53 @@ extern Bomba bombas[3]; // Declara un array de 3 bombas
 
 extern int x ;
 #endif
+
+
+/*
+
+if (isMaster) {
+    // Verifica si es una respuesta de error Modbus (bit 7 encendido)
+    bool isErrorResponse = (_frame[0] & 0x80) == 0x80;
+    
+    // Si la función coincide (ignorando el bit de error) o es una respuesta de error
+    if (((_frame[0] & 0x7F) == _sentFrame[0]) || isErrorResponse) {
+        if (_reply == EX_PASSTHROUGH || _reply == EX_FORCE_PROCESS) {
+            masterPDU(_frame, _sentFrame, _sentReg, _data);
+        }
+        
+        // Llama al callback con el código de resultado
+        if (_cb) {
+            ResultCode result = isErrorResponse ? 
+                static_cast<ResultCode>(_frame[1]) : // Código de error Modbus
+                static_cast<ResultCode>(_reply);     // EX_SUCCESS u otro
+            
+            _cb(result, _len, _frame); // Pasa los datos recibidos
+            _cb = nullptr;
+        }
+        
+        // Limpieza
+        free(_sentFrame);
+        _sentFrame = nullptr;
+        _data = nullptr;
+        _slaveId = 0;
+    }
+}
+
+
+ if (isMaster) {
+        if ((_frame[0] & 0x7F) == _sentFrame[0]) { // Check if function code the same as requested
+      // Procass incoming frame as master
+      if (_reply == EX_PASSTHROUGH || _reply == EX_FORCE_PROCESS)
+        masterPDU(_frame, _sentFrame, _sentReg, _data);
+            if (_cb) {
+          _cb((ResultCode)_reply, 0, nullptr);
+        _cb = nullptr;
+        }
+            free(_sentFrame);
+            _sentFrame = nullptr;
+            _data = nullptr;
+        _slaveId = 0;
+    }
+        _reply = Modbus::REPLY_OFF;    // No reply if master
+    }
+*/

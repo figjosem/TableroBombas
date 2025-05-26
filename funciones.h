@@ -1,6 +1,6 @@
 #ifndef FUNCIONES_H
 #define FUNCIONES_H
-
+#include <ModbusRTU.h> 
 #include <Arduino.h>
 
 // Funciones de entradas y salidas
@@ -12,6 +12,8 @@ uint16_t read165();
 // Funciones de control de LED
 void updateLedStatus(bool wifiConnected);
 
+bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data);
+bool cbRead(Modbus::ResultCode event, uint16_t transactionId, void* data);
 void colaMsj(String chat_id, String texto);
 void colaMb(uint8_t mdbus_id, uint16_t reg, String chat_id, uint16_t mdbus_data, bool rx, uint16_t* destino = nullptr);
 void procesarMensajesTelegram();
