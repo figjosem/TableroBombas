@@ -12,7 +12,7 @@ IPAddress primaryDNS(8, 8, 8, 8);
 IPAddress secondaryDNS(8, 8, 4, 4);
 
 unsigned long lastUpdateTime = millis(); // Variable para controlar el tiempo
-
+uint16_t valorLeido = 0;
 
 std::queue<MensajeTelegram> colaMensajes;
 std::queue<MsgModbus> colaModbus;
@@ -21,9 +21,11 @@ const String BOTtoken = "8141829096:AAEOBTq9R9oluiCmetI4RcZPZQSYxI0fYrg";
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-NonBlockingModbusMaster mb; ;//(&Serial1, RE_PIN);      // Reemplazar ModbusMaster node; ModbusMaster node;
-bool modbusBusy = false;
-MsgModbus currentMsg;
+ModbusRTU modbus ;//(&Serial1, RE_PIN);      // Reemplazar ModbusMaster node; ModbusMaster node;
+volatile Modbus::ResultCode ultimaTransaccionEvent ; // Inicializa con un valor no usado
+volatile uint16_t ultimoValorLeido = 0; // Para lecturas
+volatile bool callbackLlamado = false; // Bandera para saber si se llamó el callback
+
 
 bool updatedRecently = false;
 const int updateDelay = 10000;
@@ -59,9 +61,15 @@ bool LOK = false;
 bool Gon = false;
 bool Bok = true;
 bool respuesta = false;
-volatile bool lecturaCompleta = false;
-volatile uint16_t valorLeidoGlobal = 0;
-
+// Estado global para escritura
+String lastChatWrite = "";
+bool esperandoEscritura = false;
+// Estado global para lectura
+String lastChatRead = "";
+String lastChatId = "";
+uint16_t* destinoLectura = nullptr;
+bool esperandoLectura = false;
+uint8_t bombaLecturaId = 0;
 
 
 int CicloATS = 0;

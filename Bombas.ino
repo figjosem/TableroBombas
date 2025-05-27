@@ -1,35 +1,48 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
-#include <NonBlockingModbusMaster.h>//#include <ModbusRTU.h> 
+#include <ModbusRTU.h> // Reemplazar ModbusMaster.h #include <ModbusMaster.h>
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
 #include <EEPROM.h>
+#include <queue>
+
+
 
 #include "funciones.h"
 #include "variables.h"
 
 unsigned long lastTelegramCheck = 0;
-const unsigned long intervaloTelegram = 500; // cada 1.5 segundos
+const unsigned long intervaloTelegram = 100; // cada 1.5 segundos
 
 void setup() {
 //  Serial.begin(115200);
   actualizarSalidas();
   if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
-
+//    Serial.println("Error al configurar IP estática.");
   }
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1500);
-  
+    //Serial.print(".");
   }
- 
+  //Serial.println("\nConectado a WiFi con IP: " + WiFi.localIP().toString());
+
   client.setInsecure();
   inicializarEntradasSalidas();
   pinMode(RE_PIN, OUTPUT);
   Serial1.begin(19200, SERIAL_8N1, RX_PIN, TX_PIN);
-  mb.initialize(Serial1, 1824, 1824, RE_PIN, false, 1000);
-
+  modbus.begin(&Serial1, RE_PIN); // RE_PIN controla RE/DE
+  modbus.master(); // Establecer como maestro
+  //modbus.onRequestSuccess(cbWrite);
+  //modbus.setTimeoutValue(50); // 50ms timeout
+  //modbus.setTimeOutValue(100);  // Timeout de 1000 ms (1 segundo)
+  
+  
+  //node.begin(1, Serial1);  // Slave ID 1
+ 
+  //node.preTransmission(preTransmission);
+  //node.postTransmission(postTransmission);
 
   delay(updateDelay);
   updatedRecently = false;
@@ -41,17 +54,18 @@ void setup() {
 void loop() {
  
   // Ejecutar el motor de Modbus lo más seguido posible
-  //mb.run();
+  modbus.task();
   
 
   unsigned long currentTime = millis();
-
+  procesarMsgMdBus(); yield();
   // Lógica de actualización periódica (cada 60 ms)
-  if (currentTime - lastUpdateTime >= 250) {
+  if (currentTime - lastUpdateTime >= 100) {
     lastUpdateTime = currentTime;
     controlarLedWiFi(); yield();
-    procesarMsgMdBus(); yield();
+    //procesarMsgMdBus(); yield();
     leerEntradas(); yield();
+    modbus.task();
     procesarVelocidad(); yield();
 
     gestionATS(); yield();
@@ -59,13 +73,22 @@ void loop() {
     controlBombas(); yield();
     actualizarSalidas();
     //marchaBombas();
-     procesarMensajesTelegram();  yield();
+     //procesarMensajesTelegram();  yield();
+     if (esperandoLectura) {
+      static bool x = false;
+      if (!x) { 
+        x = true;
+      } else {
+       esperandoLectura = false;
+       x = false;
+      }
+     }
   }
-
+  modbus.task();
   // Revisión de Telegram cada 1.5 segundos
   if (currentTime - lastTelegramCheck >= intervaloTelegram) {
     lastTelegramCheck = currentTime;
-    //procesarMensajesTelegram();
+    procesarMensajesTelegram();
     telegramMsg();
   }
 
@@ -73,4 +96,5 @@ void loop() {
     restart = false;
     ESP.restart();
   }
+  modbus.task();
 }

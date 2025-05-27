@@ -1,14 +1,14 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
-#include <Arduino.h>
+
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
-#include <NonBlockingModbusMaster.h> //#include <ModbusRTU.h>
+#include <ModbusRTU.h>
 #include <HTTPUpdate.h>
 #include <EEPROM.h>
 #include <queue>
-
+#include <Arduino.h>
 struct MensajeTelegram {
   String chat_id;
   String texto;
@@ -26,6 +26,9 @@ struct MsgModbus {
 extern std::queue<MensajeTelegram> colaMensajes;
 extern std::queue<MsgModbus> colaModbus;
 
+extern unsigned long lastUpdateTime;
+extern uint16_t valorLeido;
+extern unsigned long inicioEstado;
 
 // Pines 74HC595
 #define DATA_595 13
@@ -38,7 +41,7 @@ extern std::queue<MsgModbus> colaModbus;
 #define LOAD_165 16
 #define CLOCK_165 17
 
-#define RE_PIN 22 
+#define RE_PIN 22
 #define TX_PIN 1
 #define RX_PIN 3
 
@@ -46,7 +49,7 @@ extern std::queue<MsgModbus> colaModbus;
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12.16"
+#define VERSION "7.12.13"
 
 extern const char* ssid;
 extern const char* password;
@@ -56,18 +59,21 @@ extern IPAddress subnet;
 extern IPAddress primaryDNS;
 extern IPAddress secondaryDNS;
 
-extern unsigned long lastUpdateTime ; // Variable para controlar el tiempo
-extern unsigned long inicioEstado ;
-extern unsigned long tiempoActual ;
+// Estado global para escritura
+extern String lastChatWrite ;
+extern bool esperandoEscritura ;
+// Estado global para lectura
+extern String lastChatRead ;
+extern String lastChatId; //BORRAR
+extern uint16_t* destinoLectura ;
+extern bool esperandoLectura ;
+extern uint8_t bombaLecturaId ;
 
 extern const String BOTtoken;
 extern WiFiClientSecure client;
 extern UniversalTelegramBot bot;
-extern NonBlockingModbusMaster mb; // NonBlockingModbusMaster
-extern bool modbusBusy ;
-extern MsgModbus currentMsg;
-
-
+extern ModbusRTU modbus; // Declaración externa
+//extern ModbusMaster node;
 extern  uint16_t param;
 extern bool readOk;
 extern bool writeOk;
@@ -111,7 +117,9 @@ extern volatile bool lecturaCompleta;
 extern volatile uint16_t registroLeido ;
 // Declaración del callback
 //extern bool cbWrite(Modbus::ResultCode event, uint16_t transactionId, void* data);
-
+extern volatile Modbus::ResultCode ultimaTransaccionEvent;
+extern volatile uint16_t ultimoValorLeido;
+extern volatile bool callbackLlamado;
 
 
 extern int CicloATS;
