@@ -35,8 +35,7 @@ void setup() {
   modbus.begin(&Serial1, RE_PIN); // RE_PIN controla RE/DE
   modbus.master(); // Establecer como maestro
   //modbus.onRequestSuccess(cbWrite);
-  //modbus.setTimeoutValue(50); // 50ms timeout
-  //modbus.setTimeOutValue(100);  // Timeout de 1000 ms (1 segundo)
+  
   
   
   //node.begin(1, Serial1);  // Slave ID 1
@@ -74,7 +73,7 @@ void loop() {
     actualizarSalidas();
     //marchaBombas();
      //procesarMensajesTelegram();  yield();
-     if (esperandoLectura) {
+     /*if (esperandoLectura) {
       static bool x = false;
       if (!x) { 
         x = true;
@@ -82,7 +81,7 @@ void loop() {
        esperandoLectura = false;
        x = false;
       }
-     }
+     }*/
   }
   modbus.task();
   // Revisión de Telegram cada 1.5 segundos

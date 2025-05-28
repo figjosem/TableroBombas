@@ -68,9 +68,9 @@ bool esperandoEscritura = false;
 String lastChatRead = "";
 String lastChatId = "";
 uint16_t* destinoLectura = nullptr;
-bool esperandoLectura = false;
+//bool esperandoLectura = false;
 uint8_t bombaLecturaId = 0;
-
+uint16_t registroLectura = 0 ;
 
 int CicloATS = 0;
 int cicloGrupo = 10;

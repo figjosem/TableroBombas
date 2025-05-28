@@ -127,8 +127,10 @@ void controlarLedWiFi() {
 
 
 void colaMsj(String chat_id, String texto) {
+  if (chat_id != "esp32") {
   MensajeTelegram msg = { chat_id, texto };
   colaMensajes.push(msg);
+  }
 }
 
 void colaMb(uint8_t mdbus_id, uint16_t reg, String chat_id, uint16_t mdbus_data, bool rx, uint16_t* destino) {
@@ -138,7 +140,7 @@ void colaMb(uint8_t mdbus_id, uint16_t reg, String chat_id, uint16_t mdbus_data,
 
 void procesarMsgMdBus() {
   unsigned long startProcessing = millis();
-     if ( !esperandoLectura && !colaModbus.empty()) {  
+     if ( !modbus.isBusy() && !colaModbus.empty()) {  
        MsgModbus msg = colaModbus.front();
        colaModbus.pop();
        if (msg.rx) {
@@ -162,7 +164,7 @@ void procesarMsgMdBus() {
 }*/
 
 void procesarMensajesTelegram() {
-  const unsigned long MAX_PROCESSING_TIME = 300; // 300ms por ciclo
+  const unsigned long MAX_PROCESSING_TIME = 100; // 300ms por ciclo
   const uint8_t MAX_MSGS_PER_CYCLE = 5;         // Máx 5 mensajes/ciclo
 
   unsigned long start = millis();
@@ -205,14 +207,60 @@ void processCommand(String command, String chat_id) {
     return;
   }
 
-  if (command == "/entradas") {
+if (command == "/entradas") {
+    // Generar mensaje con estados ON/OFF
+    String mensaje = "Estado de las entradas:\n";
+    mensaje += "Lin: " + String(Lin ? "ON" : "OFF") + "\n";
+    mensaje += "Oin: " + String(Oin ? "ON" : "OFF") + "\n";
+    mensaje += "Gin: " + String(Gin ? "ON" : "OFF") + "\n";
+    mensaje += "Lok: " + String(Lok ? "ON" : "OFF") + "\n";
+    mensaje += "Gok: " + String(Gok ? "ON" : "OFF") + "\n";
+    mensaje += "Fok: " + String(Fok ? "ON" : "OFF") + "\n";
+    mensaje += "Man: " + String(Man ? "ON" : "OFF") + "\n";
+    
+    // Opcional: mantener también la representación binaria
+    String binario = String(entrada_165, BIN);
+    while (binario.length() < 8) {
+        binario = "0" + binario;
+    }
+    mensaje += "\nValor binario: " + binario;
+    
+    colaMsj(chat_id, mensaje);
+    return;
+}
+
+if (command == "/salidas") {
+    String mensaje = "Estado de las salidas:\n";
+    mensaje += "RL: " + String(RL ? "ON" : "OFF") + "\n";
+    mensaje += "RO: " + String(RO ? "ON" : "OFF") + "\n";
+    mensaje += "RG: " + String(RG ? "ON" : "OFF") + "\n";
+    mensaje += "CTO: " + String(CTO ? "ON" : "OFF") + "\n";
+    mensaje += "PRE: " + String(PRE ? "ON" : "OFF") + "\n";
+    mensaje += "ARR: " + String(ARR ? "ON" : "OFF") + "\n";
+    mensaje += "Salida7: " + String("OFF") + "\n";  // Siempre OFF según tu código
+    mensaje += "Salida8: " + String("ON");         // Siempre ON según tu código
+
+    // Opcional: mostrar también el valor binario del byte de salidas
+    byte salidasByte = (RL << 0) | (RO << 1) | (RG << 2) | (CTO << 3) | 
+                      (PRE << 4) | (ARR << 5) | (false << 6) | (true << 7);
+    String binario = String(salidasByte, BIN);
+    while (binario.length() < 8) {
+        binario = "0" + binario;
+    }
+    mensaje += "\n\nValor binario: " + binario;
+    
+    colaMsj(chat_id, mensaje);
+    return;
+}
+  /*if (command == "/entradas") {
     String binario = String(entrada_165, BIN); // Convertir a binario
+    
     while (binario.length() < 8) {  // Rellenar con ceros hasta 8 caracteres
       binario = "0" + binario;
     }
     colaMsj(chat_id, "Entradas: " + binario + ".");
     return;
-  }
+  }*/
 
   if (command == "/update") {
     lastUpdateId = updateId;
@@ -318,7 +366,7 @@ void processReadCommand(String argument, String chat_id) {
   uint16_t registro = regStr.toInt();        // Por ejemplo, "4097"
   
   // Llamar a la función leerDatoModbus con el modbus_id y el registro correspondiente
-  colaMsj(chat_id,"id: " + String(rdcmd_id) + " reg: " + String(registro) + " lect: " + String(esperandoLectura) ) ;
+  //colaMsj(chat_id,"id: " + String(rdcmd_id) + " reg: " + String(registro) + " lect: "  ) ;
   colaMb(rdcmd_id, registro, chat_id, 0, true, &param);
 }
 
@@ -1085,8 +1133,8 @@ bool cbRead(Modbus::ResultCode event, uint16_t, void* data) {
 }*/
 bool cbRead(Modbus::ResultCode event, uint16_t len, void* data) {
   //colaMsj(lastChatRead, "dest:" + String(*destinoLectura) + "id:" + String(bombaLecturaId));
-   // if (!esperandoLectura) return false;
-    esperandoLectura = false;
+    //if (!esperandoLectura) return false;
+    //esperandoLectura = false;
 
     bool ok = (event == Modbus::EX_SUCCESS);
     uint16_t valor = 0;
@@ -1108,8 +1156,11 @@ bool cbRead(Modbus::ResultCode event, uint16_t len, void* data) {
     bombas[bombaLecturaId].enc = ok;
 
     if (lastChatRead != "esp32") {
-        String mensaje = ok ? ("Valor leído: " + String(valor))
-                           : "Error en la respuesta Modbus (Código: " + String(event) + ")";
+        String mensaje = ok ? ("Variador " + String(bombaLecturaId + 1) + "\n" +
+                                "Registro: " + String(registroLectura) + "\n" 
+                                "Valor leído: " + String(valor))
+                           : "Variador " + String(bombaLecturaId + 1) + "\n" +
+                             "Error en la respuesta Modbus (Código: " + String(event) + ")";
         colaMsj(lastChatRead, mensaje);
         lastChatId = lastChatRead;
     }
@@ -1130,12 +1181,17 @@ void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String
 
 void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id, uint16_t* destino) {
     lastChatRead = chat_id;
+    registroLectura = registro;
     destinoLectura = destino;
     bombaLecturaId = (ldmb_id - 1) ;
 
-    colaMsj(lastChatRead,  "id:" + String(ldmb_id));
+    //colaMsj(lastChatRead,  "id:" + String(ldmb_id));
     modbus.readHreg(ldmb_id, registro, &valorLeido, 1, cbRead);
-        esperandoLectura = true;
+        ///ectura = true;
 }
 
- 
+/*
+ mensaje += "• Modo: " + String(bombas[(bomba_id-1)].autom ? "AUTO" : bombas[(bomba_id-1)].marcha ? "ON" : "OFF") + "\n";
+    mensaje += "• Disponible: " + String(bombas[(bomba_id-1)].dis ? "SÍ ✅" : "NO ❌") + "\n";
+    mensaje += "• Marcha: " + String(bombas[(bomba_id-1)].marcha ? "ACTIV
+    */

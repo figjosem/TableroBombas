@@ -49,7 +49,7 @@ extern unsigned long inicioEstado;
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12.13"
+#define VERSION "7.12.17"
 
 extern const char* ssid;
 extern const char* password;
@@ -66,8 +66,9 @@ extern bool esperandoEscritura ;
 extern String lastChatRead ;
 extern String lastChatId; //BORRAR
 extern uint16_t* destinoLectura ;
-extern bool esperandoLectura ;
+//extern bool esperandoLectura ;
 extern uint8_t bombaLecturaId ;
+extern uint16_t registroLectura ;
 
 extern const String BOTtoken;
 extern WiFiClientSecure client;
