@@ -49,7 +49,7 @@ extern unsigned long inicioEstado;
 #define LED_STATUS 15
 
 // Variables generales
-#define VERSION "7.12.17"
+#define VERSION "7.13.00"
 
 extern const char* ssid;
 extern const char* password;

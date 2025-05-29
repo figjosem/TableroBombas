@@ -210,13 +210,13 @@ void processCommand(String command, String chat_id) {
 if (command == "/entradas") {
     // Generar mensaje con estados ON/OFF
     String mensaje = "Estado de las entradas:\n";
-    mensaje += "Lin: " + String(Lin ? "ON" : "OFF") + "\n";
-    mensaje += "Oin: " + String(Oin ? "ON" : "OFF") + "\n";
-    mensaje += "Gin: " + String(Gin ? "ON" : "OFF") + "\n";
-    mensaje += "Lok: " + String(Lok ? "ON" : "OFF") + "\n";
-    mensaje += "Gok: " + String(Gok ? "ON" : "OFF") + "\n";
-    mensaje += "Fok: " + String(Fok ? "ON" : "OFF") + "\n";
-    mensaje += "Man: " + String(Man ? "ON" : "OFF") + "\n";
+    mensaje += "Lin: " + String(Lin ? "ON   ✅" : "OFF  ❌") + "\n";
+    mensaje += "Oin: " + String(Oin ? "ON   ✅" : "OFF  ❌") + "\n";
+    mensaje += "Gin: " + String(Gin ? "ON   ✅" : "OFF  ❌") + "\n";
+    mensaje += "Lok: " + String(Lok ? "ON   ✅" : "OFF  ❌") + "\n";
+    mensaje += "Gok: " + String(Gok ? "ON   ✅" : "OFF  ❌") + "\n";
+    mensaje += "Fok: " + String(Fok ? "ON   ✅" : "OFF  ❌") + "\n";
+    mensaje += "Man: " + String(Man ? "ON  ✅" : "OFF ❌") + "\n";
     
     // Opcional: mantener también la representación binaria
     String binario = String(entrada_165, BIN);
@@ -231,14 +231,14 @@ if (command == "/entradas") {
 
 if (command == "/salidas") {
     String mensaje = "Estado de las salidas:\n";
-    mensaje += "RL: " + String(RL ? "ON" : "OFF") + "\n";
-    mensaje += "RO: " + String(RO ? "ON" : "OFF") + "\n";
-    mensaje += "RG: " + String(RG ? "ON" : "OFF") + "\n";
-    mensaje += "CTO: " + String(CTO ? "ON" : "OFF") + "\n";
-    mensaje += "PRE: " + String(PRE ? "ON" : "OFF") + "\n";
-    mensaje += "ARR: " + String(ARR ? "ON" : "OFF") + "\n";
-    mensaje += "Salida7: " + String("OFF") + "\n";  // Siempre OFF según tu código
-    mensaje += "Salida8: " + String("ON");         // Siempre ON según tu código
+    mensaje += "RL:    " + String(RL ? "ON  ✅" : "OFF ❌") + "\n";
+    mensaje += "RO:    " + String(RO ? "ON  ✅" : "OFF ❌") + "\n";
+    mensaje += "RG:    " + String(RG ? "ON  ✅" : "OFF ❌") + "\n";
+    mensaje += "CTO:  " + String(CTO ? "ON  ✅" : "OFF ❌") + "\n";
+    mensaje += "PRE:  " + String(PRE ? "ON  ✅" : "OFF ❌") + "\n";
+    mensaje += "ARR: " + String(ARR ? "ON  ✅" : "OFF ❌") + "\n";
+//    mensaje += "Salida7: " + String("OFF") + "\n";  // Siempre OFF según tu código
+//    mensaje += "Salida8: " + String("ON");         // Siempre ON según tu código
 
     // Opcional: mostrar también el valor binario del byte de salidas
     byte salidasByte = (RL << 0) | (RO << 1) | (RG << 2) | (CTO << 3) | 
