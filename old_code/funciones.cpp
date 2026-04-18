@@ -138,9 +138,10 @@ void colaMb(uint8_t mdbus_id, uint16_t reg, String chat_id, uint16_t mdbus_data,
     colaModbus.push(msg); 
 }
 
+/*
 void procesarMsgMdBus() {
   unsigned long startProcessing = millis();
-     if ( !modbus.isBusy() && !colaModbus.empty()) {  
+     if ( !modbusOcupado && !colaModbus.empty()) {  
        MsgModbus msg = colaModbus.front();
        colaModbus.pop();
        if (msg.rx) {
@@ -150,6 +151,18 @@ void procesarMsgMdBus() {
        }
      }  
 }
+
+bool cb(Modbus::ResultCode event, uint16_t transactionId, void* data) {
+
+  if (event != Modbus::EX_SUCCESS) {
+    // Podés loguear error acá si querés
+    // Serial.println("Error Modbus");
+  }
+
+  modbusOcupado = false;   // 🔴 LIBERA EL BUS
+
+  return true;
+}*/
 
 /*void procesarMsgMdBus() {
   if (!colaModbus.empty() ) {
@@ -1173,10 +1186,16 @@ bool cbRead(Modbus::ResultCode event, uint16_t len, void* data) {
   
 
 void enviarDatoModbus(uint8_t edmb_id, uint16_t registro, uint16_t valor, String chat_id) {
-    lastChatWrite = chat_id;
+    //lastChatWrite = chat_id;
     //esperandoEscritura = true;
     modbus.writeHreg(edmb_id, registro, valor);
     //delay(50);
+
+  if (modbusOcupado) return;
+
+  modbusOcupado = true;
+
+  modbus.writeHreg(edmb_id, registro, valor, cb);
 }
 
 void leerDatoModbus(uint8_t ldmb_id, uint16_t registro, String chat_id, uint16_t* destino) {
