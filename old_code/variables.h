@@ -29,6 +29,7 @@ extern std::queue<MsgModbus> colaModbus;
 extern unsigned long lastUpdateTime;
 extern uint16_t valorLeido;
 extern unsigned long inicioEstado;
+extern bool modbusOcupado;
 
 // Pines 74HC595
 #define DATA_595 13

@@ -1,8 +1,8 @@
 #include "variables.h"
 #include <queue>
 
-const char* ssid = "ClaroFibra467";
-const char* password = "17438327";
+const char* ssid = "AACSA 2.4"; //"ClaroFibra467";
+const char* password = "AGRO123456"; //"17438327";
 //const char* ssid = "AGRO";
 //const char* password = "AGRO1234";
 IPAddress local_IP(192, 168, 100, 50);
@@ -25,7 +25,7 @@ ModbusRTU modbus ;//(&Serial1, RE_PIN);      // Reemplazar ModbusMaster node; Mo
 volatile Modbus::ResultCode ultimaTransaccionEvent ; // Inicializa con un valor no usado
 volatile uint16_t ultimoValorLeido = 0; // Para lecturas
 volatile bool callbackLlamado = false; // Bandera para saber si se llamó el callback
-
+bool modbusOcupado = false;
 
 bool updatedRecently = false;
 const int updateDelay = 10000;
