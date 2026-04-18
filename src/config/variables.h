@@ -11,6 +11,8 @@ struct EstadoBomba {
   uint32_t horas;
 };
 
+extern uint16_t regEstadoVariador;
+
 // --- Variables globales ---
 extern EstadoBomba bombas[3];
 
