@@ -42,9 +42,9 @@ extern bool modbusOcupado;
 #define LOAD_165 16
 #define CLOCK_165 17
 
-#define RE_PIN 22
+/*#define RE_PIN 22
 #define TX_PIN 1
-#define RX_PIN 3
+#define RX_PIN 3*/
 
 // LED indicador
 #define LED_STATUS 15

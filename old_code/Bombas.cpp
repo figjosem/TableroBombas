@@ -30,10 +30,10 @@ void setup() {
 
   client.setInsecure();
   inicializarEntradasSalidas();
-  pinMode(RE_PIN, OUTPUT);
+  /*pinMode(RE_PIN, OUTPUT);
   Serial1.begin(19200, SERIAL_8N1, RX_PIN, TX_PIN);
   modbus.begin(&Serial1, RE_PIN); // RE_PIN controla RE/DE
-  modbus.master(); // Establecer como maestro
+  modbus.master(); // Establecer como maestro*/
   //modbus.onRequestSuccess(cbWrite);
   
   
