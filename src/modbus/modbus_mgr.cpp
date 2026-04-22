@@ -1,8 +1,9 @@
+//#pragma once
+#include <Arduino.h>
 #include "modbus_mgr.h"
 #include "config/config.h"
 #include <ModbusRTU.h>
 #include <queue>
-#include "bluetooth/bluetooth.h"
 
 ModbusRTU modbus;
 
@@ -17,9 +18,7 @@ bool cb(Modbus::ResultCode event, uint16_t value, void*) {
   ocupado = false;
   // ✅ AGREGAR ESTO
   if (event == Modbus::EX_SUCCESS) {
-     btPrintf("✓ OK - Valor recibido: %u (0x%04X)\n", value, value);
   } else {
-    btPrintf("✗ Error Modbus: %d\n", event);
   }
   // ✅ FIN DEBUG
   return true;
@@ -52,9 +51,7 @@ void procesarModbus() {
 
     // ✅ AGREGAR ESTO PARA DEBUG (después lo borrás o comentás)
     if (msg.rx) {
-    btPrintf("V%d R%d [R]\n", msg.id, msg.reg);
     } else {
-      btPrintf("V%d R%d [W:%d]\n", msg.id, msg.reg, msg.data);
     }
     
     // ✅ FIN DEBUG
@@ -69,7 +66,6 @@ void procesarModbus() {
   // timeout
   if (ocupado && millis() - tInicio > TIMEOUT_MB) {
     // ✅ AGREGAR ESTO
-    btPrintln("TIMEOUT MODBUS!");
     // ✅ FIN DEBUG
     ocupado = false;
   }

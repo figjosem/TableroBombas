@@ -1,73 +1,55 @@
-#include <Arduino.h>
 #include "app.h"
+#include "config/variables.h"
+#include <WiFi.h>
 #include "modbus/modbus_mgr.h"
 #include "bombas/bombas.h"
-#include "config/variables.h"
-// #include "telegram/telegram.h"
-#include "bluetooth/bluetooth.h"
-
+#include "telegram/bot.h"
+#include "commands.h"
 
 void appInit() {
-   bluetoothInit();
+    Serial.begin(115200);  //<<
+    delay(500);            //<<
+    Serial.println("Sistema iniciado en modo Debug");  //<<
+    // Después de configurar IP estática (si la usas)
+    WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
 
-  btPrintln("Iniciando...");
+    // Desactivar IPv6 (evita que use el DNS local v6)
+    //WiFi.enableIpV6(false);
 
-  modbusInit();
-  initBombas();
+    // Forzar DNS públicos (Cloudflare y Google)
+    //IPAddress dns1(1, 1, 1, 1);
+    //IPAddress dns2(8, 8, 8, 8);
+    //WiFi.setDNS(dns1, dns2);
+
+    WiFi.begin(ssid, password);
+    WiFi.setSleep(false);
+    WiFi.setAutoReconnect(true);
+    WiFi.persistent(false);
+
+    unsigned long startAttempt = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - startAttempt < 20000) {
+        delay(50);
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+    } else {
+        ESP.restart();
+    }
+
+    telegramInit();
+    //modbusInit();
+    //initBombas();
 }
 
 void appLoop() {
-  modbusTask();
-  procesarModbus();
-  /*
-  leerEstadosBombas(); 
-  actualizarEstados(); 
-  logicaBombas();
-  // telegramLoop();
-  */
- 
-  /* ✅ AGREGAR ESTO PARA PRUEBA SIMPLE
-static unsigned long lastTest = 0;
-static bool estado = false;  // false = STOP, true = RUN
+    //modbusTask();
+    //procesarModbus();
 
-if (millis() - lastTest > 10000) {
-  lastTest = millis();
-  estado = !estado;
+    if (WiFi.status() != WL_CONNECTED) {
+        WiFi.reconnect();
+    }
 
-  // --- ESCRITURA ---
-  MsgModbus msgW;
-  msgW.id = 1;
-  msgW.reg = 8192;
-  msgW.rx = false;
-  msgW.destino = nullptr;
-  msgW.data = estado ? 1 : 5;  // STOP seguro
-
-  encolarModbus(msgW);
-
-  btPrintln("WRITE enviado");
-
-  // --- LECTURA ---
-  MsgModbus msgR;
-  msgR.id = 1;
-  msgR.reg = 4097;   // 👈 estado variador
-  msgR.rx = true;
-  msgR.destino = &regEstadoVariador;
-
-  encolarModbus(msgR);
-
-  btPrintln("READ solicitado");
-}
-
-// ✅ FIN PRUEBA
-*/
-static unsigned long tPrint = 0;
-
-if (millis() - tPrint > 2000) {
-  tPrint = millis();
-
-  btPrintf("Estado variador: %u (0x%04X)\n",
-           regEstadoVariador,
-           regEstadoVariador);
-}
-
+    telegramLoop();
+    telegramProcessQueue();
+    yield();
 }
