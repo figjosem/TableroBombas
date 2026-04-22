@@ -3,7 +3,7 @@
 
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
-#include <UniversalTelegramBot.h>
+//#include <UniversalTelegramBot.h>
 #include <ModbusRTU.h>
 #include <HTTPUpdate.h>
 #include <EEPROM.h>
@@ -13,6 +13,9 @@ struct MensajeTelegram {
   String chat_id;
   String texto;
 };
+
+extern const String BOTtoken;
+extern const int LED_PIN;
 
 struct MsgModbus {
   uint8_t mdbus_id;

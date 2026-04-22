@@ -1,9 +1,25 @@
 #include "variables.h"
+#include "../utils/cola.h"
+
 
 // --- Instancias reales ---
 EstadoBomba bombas[3];
 
 uint16_t regEstadoVariador = 0;
+
+
+const int LED_PIN = 2;
+
+bool updatedRecently = false;
+bool restart = false;
+//WiFiClientSecure client;   // si no lo tienes en otro módulo
+
+uint16_t param = 0;
+String modoATS = "Auto";
+int CicloATS = 0;
+int cicloGrupo = 10;
+uint32_t lastUpdateId = 0;
+uint32_t updateId = 0;
 
 unsigned long elapsed = 0;
 unsigned long t_anterior = 0;
