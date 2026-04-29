@@ -5,7 +5,7 @@
 #include "../config/variables.h"
 #include "../utils/cola.h"
 
-extern const int LED_PIN;
+//extern const int LED_PIN;
 extern void processCommand(String command, String chat_id);
 
 long last_update_id = 0;
@@ -60,7 +60,7 @@ bool httpGetTelegram(const String &url, String &payload, int retries = 1) {
 }
 
 void telegramInit() {
-    pinMode(LED_PIN, OUTPUT);
+    //pinMode(LED_PIN, OUTPUT);
 
     String payload;
     String url = "https://api.telegram.org/bot" + String(BOTtoken) + 
@@ -77,7 +77,7 @@ void telegramInit() {
     }
 
     //ledBlink(2, 150, 150);
-    Serial.println("Telegram Bot inicializado.");
+    //Serial.println("Telegram Bot inicializado.");
 }
 
 void telegramLoop() {
@@ -86,7 +86,7 @@ void telegramLoop() {
     lastCheck = millis();
 
     if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("WiFi no conectado, reintentando...");
+       // Serial.println("WiFi no conectado, reintentando...");
         WiFi.reconnect();
         delay(1000);
         return;
@@ -97,9 +97,9 @@ void telegramLoop() {
                  "/getUpdates?offset=" + String(last_update_id + 1) + 
                  "&limit=1&allowed_updates=[\"message\"]";
 
-    Serial.print("Consultando Telegram... ");
+   // Serial.print("Consultando Telegram... ");
     if (httpGetTelegram(url, payload)) {
-        Serial.println("OK!");
+       // Serial.println("OK!");
         DynamicJsonDocument doc(2048);
         DeserializationError error = deserializeJson(doc, payload);
         if (!error) {
@@ -111,28 +111,28 @@ void telegramLoop() {
                     String chat_id = String(id_raw);
                     String text = result["message"]["text"] | "";
                     if (text.length() > 0) {
-                        Serial.println(" > Msg: " + text);
-                        digitalWrite(LED_PIN, HIGH);
+                     //   Serial.println(" > Msg: " + text);
+                       // digitalWrite(LED_PIN, HIGH);
                         processCommand(text, chat_id);
-                        digitalWrite(LED_PIN, LOW);
+                       // digitalWrite(LED_PIN, LOW);
                         delay(10);
                         yield();
                     }
                 }
             }
         } else {
-            Serial.print("Error JSON: ");
-            Serial.println(error.c_str());
+           // Serial.print("Error JSON: ");
+           // Serial.println(error.c_str());
         }
     } else {
-        Serial.println("Fallo HTTP");
+       // Serial.println("Fallo HTTP");
     }
     //esp_task_wdt_reset();  // Alimentar watchdog
 }
 
 void telegramProcessQueue() {
     static unsigned long lastSend = 0;
-    const unsigned long minInterval = 80;
+    const unsigned long minInterval = 150;
 
     if (colaMensajes.empty()) return;
 

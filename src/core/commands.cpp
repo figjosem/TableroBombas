@@ -188,6 +188,7 @@ void processWriteCommand(String argument, String chat_id) {
 
 void processReadCommand(String argument, String chat_id) {
   // Se espera que 'argument' tenga el formato: "<modbus_id> <registro>"
+  //digitalWrite(LED_PIN, HIGH); delay(100); digitalWrite(LED_PIN, LOW);
 
   int spaceIndex = argument.indexOf(' ');
   if (spaceIndex == -1) {

@@ -13,12 +13,13 @@ void colaMsj(String chat_id, String texto) {
 }
 
 void colaMb(uint8_t mdbus_id, uint16_t reg, String chat_id, uint16_t mdbus_data, bool rx, uint16_t* destino) {
-    MsgModbus msg;
-    msg.id = mdbus_id;
-    msg.reg = reg;
-    msg.chat_id = chat_id;
-    msg.data = mdbus_data;
-    msg.rx = rx;
-    msg.destino = destino;
-    colaModbus.push(msg);
+    MsgModbus nuevoMsg;
+    nuevoMsg.id = mdbus_id;
+    nuevoMsg.reg = reg;
+    nuevoMsg.chat_id = chat_id;
+    nuevoMsg.data = mdbus_data;
+    nuevoMsg.rx = rx;
+    nuevoMsg.destino = destino;
+    
+    colaModbus.push(nuevoMsg); // Debe ser la misma que lee modbus_mgr.cpp
 }
