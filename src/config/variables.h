@@ -12,8 +12,8 @@
 extern const char* ssid;
 extern const char* password;
 
-extern std::queue<MensajeTelegram> colaMensajes;  // Cola global para mensajes de Telegram  
-extern std::queue<MsgModbus> colaModbus;  // Cola global para mensajes de Modbus  
+//<<<<extern std::queue<MensajeTelegram> colaMensajes;  // Cola global para mensajes de Telegram  
+//<<<<extern std::queue<MsgModbus> colaModbus;  // Cola global para mensajes de Modbus  
 
 
 extern IPAddress local_IP;
@@ -27,7 +27,7 @@ extern const String BOTtoken ;
 // Variables generales
 #define VERSION "7.13.00"
 
-extern const int LED_PIN;
+//extern const int LED_PIN;
 
 extern WiFiClientSecure client; 
 extern uint16_t param;
@@ -43,7 +43,7 @@ extern bool restart;
 
 
 
-extern std::queue<MensajeTelegram> colaMensajes;
+//<<<<extern std::queue<MensajeTelegram> colaMensajes;
 // extern std::queue<MsgModbus> colaModbus;  // ELIMINAR esta línea
 
 
