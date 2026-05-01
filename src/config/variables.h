@@ -53,6 +53,7 @@ struct EstadoBomba {
   bool enc;
   bool dis;
   bool marcha;
+  bool marchaReal;
   uint32_t horas;
   uint16_t vel;  
 };

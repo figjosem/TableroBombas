@@ -17,10 +17,11 @@ extern const String BOTtoken;
 // --- Hardware ---
 #define MB_BAUD    19200
 #define MB_TIMEOUT 2000
-#define MODBUS_RX_PIN 3
-#define MODBUS_TX_PIN 1
+#define MODBUS_RX_PIN 3 //3
+#define MODBUS_TX_PIN 1 //1
 #define MODBUS_RE_PIN 22 
 #define LED_PIN 2
 
 // --- Registros Modbus ---
-#define REG_ESTADO 8192
+#define REG_ESTADO 12288
+

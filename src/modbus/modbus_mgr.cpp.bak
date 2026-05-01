@@ -1,0 +1,67 @@
+#include <Arduino.h>
+#include <ModbusRTU.h>
+#include "modbus_mgr.h"
+#include "config/config.h"
+#include "utils/cola.h"
+#include "config/variables.h"
+
+
+ModbusRTU mb;
+static bool ocupado = false;
+static MsgModbus currentModbusMsg;
+
+// Callback para cuando termina una lectura/escritura
+bool cbModbus(Modbus::ResultCode event, uint16_t transactionId, void* data) {
+    if (event != Modbus::EX_SUCCESS) {
+        Serial.printf("❌ Error Modbus: 0x%02X\n", event);
+        if (currentModbusMsg.chat_id.length() > 0) {
+            colaMsj(currentModbusMsg.chat_id, "⚠️ Error Modbus: " + String(event, HEX));
+        }
+    } else {
+        // Si fue lectura, el dato ya está en el buffer o registro
+        if (currentModbusMsg.rx && currentModbusMsg.chat_id.length() > 0) {
+            colaMsj(currentModbusMsg.chat_id, "✅ Lectura OK");
+        }
+    }
+    ocupado = false;
+    return true;
+}
+
+void modbusInit() {
+    // Configuramos el Serial para RS485
+    Serial2.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
+    
+    // Inicializamos la librería en modo Maestro (RTU)
+    mb.begin(&Serial2, MAX485_RE_DE); 
+    mb.master();
+    
+    Serial.println("✅ Hardware Modbus RTU (Emelianov) Inicializado");
+}
+
+void modbusTask() {
+    mb.task(); // Esta función debe ejecutarse constantemente
+    yield();
+}
+
+void procesarModbus() {
+    // Si la librería está procesando o la cola está vacía, salimos
+    if (ocupado || colaModbus.empty()) return;
+
+    currentModbusMsg = colaModbus.front();
+    colaModbus.pop();
+
+    uint16_t resultado[1]; // Buffer temporal para la lectura
+
+    if (currentModbusMsg.rx) {
+        // LECTURA: Registro de retención (Hreg)
+        // La librería usa callbacks para no bloquear el Core 1
+        if (mb.readHreg(currentModbusMsg.id, currentModbusMsg.reg, (uint16_t*)currentModbusMsg.destino, 1, cbModbus)) {
+            ocupado = true;
+        }
+    } else {
+        // ESCRITURA: Un solo registro
+        if (mb.writeHreg(currentModbusMsg.id, currentModbusMsg.reg, currentModbusMsg.valor_write, cbModbus)) {
+            ocupado = true;
+        }
+    }
+}
