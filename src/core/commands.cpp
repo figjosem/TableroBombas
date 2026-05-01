@@ -248,24 +248,22 @@ void processBombaCommand(String argument, String chat_id) {
     modbusBbaActiva = modbus_id;
     colaMsj(chat_id, "Bomba " + nroStr + " activada.", "");
   }
-  else*/ if (comStr == "on") {
-    // Enciende o pone en marcha la bomba
-    // Aquí puedes llamar a una función que active la bomba
-     
-        if (bombas[(bomba_id-1)].enc) {
-          bombas[(bomba_id-1)].autom = false;
-          bombas[(bomba_id-1)].marcha = true;
-          bombas[(bomba_id-1)].dis = false;
-          if ((bomba_id-1) == bombaActiva) bombaActiva = -1;
-          mensaje =  "Bomba " + nroStr + " en marcha.";
-          //colaMsj(chat_id, "Bomba " + nroStr + " en marcha.", "");
-        } else {
-          mensaje = "El Variador " + nroStr + " esta apagado o no responde.";
-          //colaMsj(chat_id, "El Variador " + nroStr + " esta apagado o no responde.", "");
-        }
-          colaMsj(chat_id, mensaje);
+  else*/else if (comStr == "on") {
+    int idx = bomba_id - 1;
+    if (bombas[idx].enc) {
+        bombas[idx].autom = false; // Bloqueamos el automatismo para esta bomba
+        bombas[idx].marcha = true;
         
-  }
+        // Generamos el comando Modbus de ESCRITURA inmediato
+        // Registro 8192, Valor 1 (Marcha)
+        colaMb(bomba_id, 8192, chat_id, 1, false, nullptr);//[cite: 2]
+        
+        mensaje = "Bomba " + nroStr + " en MANUAL: Iniciando marcha...";
+    } else {
+        mensaje = "⚠️ Error: El variador " + nroStr + " no está comunicado.";
+    }
+    colaMsj(chat_id, mensaje);
+}
   else if (comStr == "off") {
      // Detiene la bomba
     // Aquí puedes llamar a una función que detenga la bomba

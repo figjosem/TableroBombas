@@ -292,14 +292,17 @@ void logicaBombas() {
 
     // Reset de marchas antes de asignar nuevas
     for (int i = 0; i < 3; i++) {
-        bombas[i].marcha = false;
+        if (bombas[i].autom) {
+            bombas[i].marcha = false; // Solo reseteamos las que están auto
+        }
     }
 
     // Asignación de marchas según modo B
     switch (B) {
         case 1: // Una de 15 HP
-            if (bombaActiva != -1) bombas[bombaActiva].marcha = true;    
-            break;
+            if (bombaActiva != -1 && bombas[bombaActiva].autom) 
+            bombas[bombaActiva].marcha = true;//[cite: 3]
+        break;
         case 2: // La de 25 HP
             if (bombas[1].dis) bombas[1].marcha = true;
             break;
@@ -318,9 +321,8 @@ void logicaBombas() {
     static int ultimoComandoEnviado[3] = {-1, -1, -1};
 
     for (int i = 0; i < 3; i++) {
-        int comandoDeseado = (bombas[i].marcha) ? 1 : 5;
-
-        if (comandoDeseado != ultimoComandoEnviado[i]) {
+       int comandoDeseado = (bombas[i].marcha) ? 1 : 5;//[cite: 3]
+       if (comandoDeseado != ultimoComandoEnviado[i]) {
             MsgModbus msg;
             msg.id = i + 1;
             msg.reg = 8192; 
@@ -366,7 +368,7 @@ void actualizarEstados() {
         } 
         else if (valor == 3) {
             bombas[i].marchaReal = false;
-            bombas[i].enc = false;         
+            bombas[i].enc = true;         
         } 
         else {
             bombas[i].marchaReal = false;
