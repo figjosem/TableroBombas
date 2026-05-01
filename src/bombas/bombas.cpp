@@ -339,24 +339,18 @@ void leerEstadosBombas() {
     static unsigned long lastRun = 0;
     static int indiceBomba = 0;
 
-    // Aumentamos un poco el tiempo para dar aire al Core 0
-    if (millis() - lastRun < 10000) return; 
+    if (millis() - lastRun < 15000) return; // Lee cada 15 seg para no saturar
     lastRun = millis();
 
     MsgModbus msg;
     msg.id = indiceBomba + 1; 
     msg.reg = 12288;
     msg.rx = true;
-    
-    // En lugar de apuntar al buffer global directamente, 
-    // usa una estructura de intercambio protegida si es posible.
+    msg.chat_id = "esp32"; // Importante: Si es lectura automática, chat_id vacío para no saturar Telegram
     msg.destino = &mbBuffer[indiceBomba]; 
 
     if (encolarModbus(msg)) {
         indiceBomba = (indiceBomba + 1) % 3; 
-        // IMPORTANTE: vTaskDelay permite que el Core 0 respire 
-        // y procese los paquetes SSL pendientes de Telegram.
-        vTaskDelay(pdMS_TO_TICKS(50));//[cite: 3]
     }
 }
 
@@ -372,7 +366,7 @@ void actualizarEstados() {
         } 
         else if (valor == 3) {
             bombas[i].marchaReal = false;
-            bombas[i].enc = true;         
+            bombas[i].enc = false;         
         } 
         else {
             bombas[i].marchaReal = false;
