@@ -8,7 +8,7 @@
 #include "esp_task_wdt.h"
 
 void tareaTelegram(void *pvParameters) {
-    Serial.println("→ Tarea Telegram (Core 0) iniciada");
+    //Serial.println("→ Tarea Telegram (Core 0) iniciada");
     while (true) {
         if (WiFi.status() == WL_CONNECTED) {
             telegramLoop();
@@ -23,7 +23,7 @@ void tareaTelegram(void *pvParameters) {
 }
 
 void tareaModbusBombas(void *pvParameters) {
-    Serial.println("→ Tarea Modbus + Bombas (Core 1) iniciada");
+    //Serial.println("→ Tarea Modbus + Bombas (Core 1) iniciada");
     while (true) {
         modbusTask();
         procesarModbus();
@@ -31,21 +31,22 @@ void tareaModbusBombas(void *pvParameters) {
         // Lógica de bombas MUY lenta temporalmente (cada 30 segundos)
         static unsigned long lastBombas = 0;
         if (millis() - lastBombas >= 30000) {
-            //leerEstadosBombas();
-            //logicaBombas();
-            //actualizarEstados();
+            leerEstadosBombas();
+            logicaBombas();
+            actualizarEstados();
             lastBombas = millis();
         }
 
         esp_task_wdt_reset();
         vTaskDelay(500 / portTICK_PERIOD_MS);     // Pausa más larga
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
 void appInit() {
-    Serial.begin(115200);
-    delay(2000);
-    Serial.println("\n=== SISTEMA INICIANDO - DUAL CORE v4 (Conservador) ===");
+    //Serial.begin(115200);
+    //delay(2000);
+    //Serial.println("\n=== SISTEMA INICIANDO - DUAL CORE v4 (Conservador) ===");
 
     WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
     WiFi.begin(ssid, password);
