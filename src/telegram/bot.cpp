@@ -10,12 +10,6 @@ extern void processCommand(String command, String chat_id);
 
 long last_update_id = 0;
 
-//void ledBlink(int times, int ms_on, int ms_off) {
-//    for (int i = 0; i < times; i++) {
-//        digitalWrite(LED_PIN, HIGH); delay(ms_on);
-//        digitalWrite(LED_PIN, LOW); delay(ms_off);
-//    }
-//}
 
 String urlencode(String str) {
     String encoded = "";
@@ -34,7 +28,7 @@ String urlencode(String str) {
 }
 
 // Función auxiliar para peticiones HTTP con cliente SSL temporal
-bool httpGetTelegram(const String &url, String &payload, int retries = 1) {
+/*bool httpGetTelegram(const String &url, String &payload, int retries = 1) {
     for (int i = 0; i <= retries; i++) {
         WiFiClientSecure *client = new WiFiClientSecure();
         client->setInsecure();
@@ -54,10 +48,38 @@ bool httpGetTelegram(const String &url, String &payload, int retries = 1) {
         delay(20);
         yield();
         if (success) return true;
-        if (i < retries) delay(500); // Pausa antes de reintentar
+        if (i < retries) delay(50); // Pausa antes de reintentar
     }
     return false;
 }
+*/
+// Reemplaza tu httpGetTelegram por esta versión ultra-segura
+bool httpGetTelegram(const String &url, String &payload, int retries = 1) {
+    for (int i = 0; i <= retries; i++) {
+        WiFiClientSecure client; 
+        client.setInsecure();
+        client.setTimeout(5000); // 5 segundos máximo
+        
+        HTTPClient http;
+        http.setReuse(false); // No reutilizar conexiones para evitar corrupción
+        
+        bool success = false;
+        if (http.begin(client, url)) {
+            int httpCode = http.GET();
+            if (httpCode == 200) {
+                payload = http.getString();
+                success = (payload.length() > 0);
+            }
+            http.end(); // Liberación inmediata
+        }
+        
+        if (success) return true;
+        vTaskDelay(100 / portTICK_PERIOD_MS); 
+    }
+    return false;
+}
+
+
 
 void telegramInit() {
     //pinMode(LED_PIN, OUTPUT);
@@ -80,54 +102,87 @@ void telegramInit() {
     //Serial.println("Telegram Bot inicializado.");
 }
 
+/*void telegramLoop() {
+    static unsigned long lastCheck = 0;
+    if (millis() - lastCheck < 2000) return;
+    lastCheck = millis();
+
+    if (WiFi.status() != WL_CONNECTED) return;
+
+    String payload;
+    String url = "https://api.telegram.org/bot" + String(BOTtoken) + 
+                 "/getUpdates?offset=" + String(last_update_id + 1) + 
+                 "&limit=1&timeout=5"; // Añadimos timeout a la API
+
+    if (httpGetTelegram(url, payload)) {
+        // Usamos un tamaño más conservador y verificamos antes de procesar
+        StaticJsonDocument<1500> doc; 
+        DeserializationError error = deserializeJson(doc, payload);
+        
+        if (error) return; // Si el JSON está mal, abortamos de inmediato
+
+        // Verificamos que "result" sea un arreglo antes de iterar
+        JsonVariant result_var = doc["result"];
+        if (!result_var.is<JsonArray>()) return;
+
+        JsonArray results = result_var.as<JsonArray>();
+        for (JsonObject result : results) {
+            last_update_id = result["update_id"].as<long>();
+            
+            // Verificamos existencia de mensaje y texto antes de usar
+            if (result.containsKey("message") && result["message"].containsKey("text")) {
+                long long id_raw = result["message"]["chat"]["id"].as<long long>();
+                String chat_id = String(id_raw);
+                String text = result["message"]["text"].as<String>();
+                
+                if (text.length() > 0) {
+                    processCommand(text, chat_id);
+                }
+            }
+        }
+    }
+    yield(); // Devolvemos el control al sistema operativo
+}
+*/
 void telegramLoop() {
     static unsigned long lastCheck = 0;
     if (millis() - lastCheck < 2000) return;
     lastCheck = millis();
 
-    if (WiFi.status() != WL_CONNECTED) {
-       // Serial.println("WiFi no conectado, reintentando...");
-        WiFi.reconnect();
-        delay(1000);
-        return;
-    }
+    if (WiFi.status() != WL_CONNECTED) return;
 
-    String payload;
+    String payload = "";
     String url = "https://api.telegram.org/bot" + String(BOTtoken) + 
                  "/getUpdates?offset=" + String(last_update_id + 1) + 
-                 "&limit=1&allowed_updates=[\"message\"]";
+                 "&limit=1&timeout=5";
 
-   // Serial.print("Consultando Telegram... ");
     if (httpGetTelegram(url, payload)) {
-       // Serial.println("OK!");
-        DynamicJsonDocument doc(2048);
+        // Usamos un tamaño fijo para evitar fragmentar el heap[cite: 7]
+        StaticJsonDocument<1536> doc; 
         DeserializationError error = deserializeJson(doc, payload);
-        if (!error) {
-            JsonArray results = doc["result"];
-            for (JsonObject result : results) {
-                last_update_id = result["update_id"].as<long>();
-                if (result.containsKey("message")) {
-                    long long id_raw = result["message"]["chat"]["id"].as<long long>();
-                    String chat_id = String(id_raw);
-                    String text = result["message"]["text"] | "";
+        
+        if (error) return; 
+
+        // Verificación jerárquica de existencia antes de acceder[cite: 7]
+        if (!doc.containsKey("result") || !doc["result"].is<JsonArray>()) return;
+
+        JsonArray results = doc["result"].as<JsonArray>();
+        for (JsonObject result : results) {
+            last_update_id = result["update_id"].as<long>();
+            
+            if (result.containsKey("message")) {
+                JsonObject msg = result["message"];
+                if (msg.containsKey("text") && msg.containsKey("chat")) {
+                    String chat_id = String(msg["chat"]["id"].as<long long>());
+                    String text = msg["text"].as<String>();
+                    
                     if (text.length() > 0) {
-                     //   Serial.println(" > Msg: " + text);
-                       // digitalWrite(LED_PIN, HIGH);
-                        processCommand(text, chat_id);
-                       // digitalWrite(LED_PIN, LOW);
-                        delay(10);
-                        yield();
+                        processCommand(text, chat_id);//[cite: 5]
                     }
                 }
             }
-        } else {
-           // Serial.print("Error JSON: ");
-           // Serial.println(error.c_str());
         }
-    } else {
-       // Serial.println("Fallo HTTP");
     }
-    //esp_task_wdt_reset();  // Alimentar watchdog
 }
 
 void telegramProcessQueue() {
@@ -152,18 +207,17 @@ bool telegramEnviarDirecto(String chat_id, String texto) {
     String url = "https://api.telegram.org/bot" + String(BOTtoken) + 
                  "/sendMessage?chat_id=" + chat_id + "&text=" + urlencode(texto);
     
-    WiFiClientSecure *client = new WiFiClientSecure();
-    client->setInsecure();
+    WiFiClientSecure client; // En el stack, se destruye al salir de la función
+    client.setInsecure();
     HTTPClient http;
+    http.setReuse(false); // CRÍTICO: No reutilizar para evitar fugas de memoria
+    http.setTimeout(5000);
+
     bool success = false;
-    if (http.begin(*client, url)) {
+    if (http.begin(client, url)) {
         int httpCode = http.GET();
         success = (httpCode == 200);
-        http.end();
+        http.end(); // Liberar recursos inmediatamente
     }
-    client->stop();
-    delete client;
-    delay(5);
-    yield();
     return success;
 }

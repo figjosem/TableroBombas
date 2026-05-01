@@ -16,49 +16,26 @@ static MsgModbus currentModbusMsg;
 static bool esperandoRespuesta = false;
 
 // ====================== SIMULADOR DE RESPUESTA ======================
-static bool simulando = false;        // Cambia a false cuando tengas variadores reales
+static bool simulando = true;        // Cambia a false cuando tengas variadores reales
 
 bool cb(Modbus::ResultCode event, uint16_t transactionId, void* data) {
     ocupado = false;
     esperandoRespuesta = false;
 
-    digitalWrite(2, HIGH);
-    delay(30);
-    digitalWrite(2, LOW);
+    digitalWrite(2, HIGH); delay(30); digitalWrite(2, LOW);
 
     String cid = currentModbusMsg.chat_id;
 
     if (event == Modbus::EX_SUCCESS) {
-
         if (currentModbusMsg.rx) {
-            // 📥 LECTURA
-            if (currentModbusMsg.destino != nullptr) {
-                uint16_t valor = *(currentModbusMsg.destino);
-
-                colaMsj(cid,
-                    "✅ *Lectura Exitosa*\nReg: " +
-                    String(currentModbusMsg.reg) +
-                    "\nDato: " + String(valor)
-                );
-
-            } else {
-                colaMsj(cid, "⚠️ Lectura sin destino válido");
-            }
-
+            uint16_t valor = (currentModbusMsg.destino != nullptr) ? *(currentModbusMsg.destino) : 1234;
+            colaMsj(cid, "✅ *Lectura Exitosa (SIM)*\nReg: " + String(currentModbusMsg.reg) + "\nDato: " + String(valor));
         } else {
-            // 📤 ESCRITURA
-            colaMsj(cid,
-                "✅ *Escritura Exitosa*\nReg: " +
-                String(currentModbusMsg.reg)
-            );
+            colaMsj(cid, "✅ *Escritura Exitosa (SIM)*\nReg: " + String(currentModbusMsg.reg));
         }
-
     } else {
-        colaMsj(cid,
-            "❌ Error Modbus: 0x" + String(event, HEX)
-        );
+        colaMsj(cid, "❌ Error Modbus: 0x" + String(event, HEX));
     }
-
     return true;
 }
 
