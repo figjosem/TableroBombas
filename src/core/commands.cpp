@@ -9,6 +9,7 @@
 #include <WiFiClientSecure.h>
 #include "config/variables.h"  
 #include "utils/cola.h"   // Para colaMsj, colaMb, etc.
+#include <Preferences.h>
 
 //static void updateFirmware(String url, String chat_id);
 
@@ -105,12 +106,17 @@ if (command == "/salidas") {
     
     lastUpdateId = updateId;
     saveLastUpdateId(lastUpdateId);
+    guardarConfiguracion();
     delay(5);
     colaMsj(chat_id, "Reiniciando...");
     updatedRecently = true;
-    delay(1000);
-    restart = true;
-    delay(1000);
+    unsigned long momento = millis();
+    while (millis() - momento < 1000) {
+        // Permitimos que otras tareas (como el envío de Telegram) respiren
+        delay(10); 
+    }
+    
+    ESP.restart(); // Comando físico de reinicio
     
     return;
   }
@@ -228,6 +234,7 @@ void processModoATSCommand(String argument, String chat_id) {
         actualizarSalidas();
         colaMsj(chat_id, "ATS: Sistema DESCONECTADO (Posición 0) 🛑");
     }
+    
     else if (argument == "estado") {
         String st = "📊 *ESTADO ATS*\n";
         st += "• Modo: " + modoATS + "\n";
@@ -236,6 +243,8 @@ void processModoATSCommand(String argument, String chat_id) {
         st += "• Posición Actual: " + String(Lin ? "LÍNEA" : (Gin ? "GRUPO" : (Oin ? "CERO (0)" : "TRANSICIÓN")));
         colaMsj(chat_id, st);
     }
+    guardarConfiguracion(); // Guardamos el nuevo modo en la configuración persistente
+
 }
 
 // Nueva función para procesar solo la selección de bomba activa
@@ -349,6 +358,8 @@ mensaje += "• Velocidad: " + String(bombas[(bomba_id-1)].vel / 50.0 ,1) + " %"
   else {
     colaMsj(chat_id, "Error: comando de bomba no reconocido.");
   }
+  guardarConfiguracion(); // Guardamos cualquier cambio en la configuración persistente
+
 }
 
 void processUpdateCommand(String url, String chat_id) {
@@ -372,4 +383,41 @@ uint32_t loadLastUpdateId() {
 }
 
 
+
+
+
+void guardarConfiguracion() {
+    prefs.begin("config", false); // "config" es el nombre del espacio, false = lectura/escritura
+    
+    // Guardar estados de bombas
+    for (int i = 0; i < 3; i++) {
+        String p_autom = "b" + String(i) + "a";
+        String p_marcha = "b" + String(i) + "m";
+        prefs.putBool(p_autom.c_str(), bombas[i].autom);
+        prefs.putBool(p_marcha.c_str(), bombas[i].marcha);
+    }
+
+    // Guardar otros seteos
+    prefs.putString("modoATS", modoATS);
+    prefs.putFloat("presionSet", presionSetPoint);
+    prefs.putUInt("horasB1", bombas[0].horas);
+    prefs.end();
+}
+
+void cargarConfiguracion() {
+    prefs.begin("config", true); // true = modo solo lectura
+    
+    for (int i = 0; i < 3; i++) {
+        String p_autom = "b" + String(i) + "a";
+        String p_marcha = "b" + String(i) + "m";
+        // Si no existe el valor, usamos false por defecto
+        bombas[i].autom = prefs.getBool(p_autom.c_str(), false);
+        bombas[i].marcha = prefs.getBool(p_marcha.c_str(), false);
+    }
+
+    modoATS = prefs.getString("modoATS", "AUTO");
+    presionSetPoint = prefs.getFloat("presionSet", 2.5); // Valor por defecto 2.5 bar
+    
+    prefs.end();
+}
 

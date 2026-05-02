@@ -6,11 +6,16 @@
 #include <ModbusRTU.h>
 #include "../utils/cola.h"
 #include <queue>
+#include "Preferences.h"
 
 #include "modbus/modbus_mgr.h"  // Para MsgModbus
 
 extern const char* ssid;
 extern const char* password;
+
+extern Preferences prefs ;
+extern float presionSetPoint;  
+extern uint32_t horasBomba[3];     // (Asegúrate que el nombre coincida)    //
 
 //<<<<extern std::queue<MensajeTelegram> colaMensajes;  // Cola global para mensajes de Telegram  
 //<<<<extern std::queue<MsgModbus> colaModbus;  // Cola global para mensajes de Modbus  

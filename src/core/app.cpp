@@ -66,35 +66,48 @@ void tareaModbusBombas(void *pvParameters) {
 
 void appInit() {
     inicializarEntradasSalidas();
+    cargarConfiguracion();
     Serial.begin(115200);
     delay(2000);
-    Serial.println("\n=== SISTEMA INICIANDO - DUAL CORE v4 (Conservador) ===");
+    Serial.println("\n=== SISTEMA INICIANDO - DUAL CORE v4 (DHCP Mode) ===");
 
-    WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
-    WiFi.begin(ssid, password);
+    // 1. ELIMINAR WiFi.config para activar DHCP
+    // WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS); 
+
+    // 2. Conectar a red abierta (password vacío)
+    WiFi.begin(ssid, ""); 
+    
+    WiFi.mode(WIFI_STA);
     WiFi.setSleep(false);
     WiFi.setAutoReconnect(true);
 
     unsigned long start = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - start < 20000) {
         delay(100);
+        Serial.print(".");
     }
-// --- LLAMADA DE EMERGENCIA AL ARRANCAR ---
+
     if (WiFi.status() == WL_CONNECTED) {
-        checkEmergencyUpdate(); // Si hay versión nueva, se reinicia aquí mismo[cite: 2]
+        Serial.println("\n✅ WiFi Conectado por DHCP");
+        Serial.print("📍 IP Asignada: ");
+        Serial.println(WiFi.localIP()); // Muestra la IP que dio el router
+        
+        checkEmergencyUpdate(); // Si hay versión nueva, se reinicia aquí
+    } else {
+        Serial.println("\n❌ No se pudo obtener IP del router");
     }
 
     telegramInit();
-    colaMsj("7016939249", "🤖 Sistema Reiniciado y Online - Dual Core v4");
+    // Es buena idea avisarte la IP por Telegram
+    String msgLog = "🤖 Sistema Online - IP: " + WiFi.localIP().toString();
+    colaMsj("7016939249", msgLog);
 
     modbusInit();
     initBombas();
 
-    Serial.println("Creando tareas FreeRTOS con stack grande...");
-
-    // Stack muy grande para Telegram (la más problemática)
-    xTaskCreatePinnedToCore(tareaTelegram,     "Telegram",  20480, NULL, 3, NULL, 0);   // 16 KB
-    xTaskCreatePinnedToCore(tareaModbusBombas, "Modbus",    12288, NULL, 2, NULL, 1);   // 12 KB
+    Serial.println("Creando tareas FreeRTOS...");
+    xTaskCreatePinnedToCore(tareaTelegram, "Telegram", 20480, NULL, 3, NULL, 0);
+    xTaskCreatePinnedToCore(tareaModbusBombas, "Modbus", 12288, NULL, 2, NULL, 1);
 
     Serial.println("Tareas creadas. Sistema corriendo.");
 }

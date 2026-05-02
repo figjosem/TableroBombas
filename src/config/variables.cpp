@@ -5,6 +5,10 @@
 // --- Instancias reales ---
 EstadoBomba bombas[3];
 
+float presionSetPoint = 2.5;       //
+uint32_t horasBomba[3] = {0, 0, 0}; //
+Preferences prefs;
+
 uint16_t regEstadoVariador = 0;
 
 
