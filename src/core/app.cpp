@@ -1,4 +1,6 @@
 #include "app.h"
+#include "utils/ota_utils.h"
+#include "io/io.h"
 #include "config/variables.h"
 #include <WiFi.h>
 #include "modbus/modbus_mgr.h"
@@ -8,7 +10,7 @@
 #include "esp_task_wdt.h"
 
 void tareaTelegram(void *pvParameters) {
-    //Serial.println("→ Tarea Telegram (Core 0) iniciada");
+    Serial.println("→ Tarea Telegram (Core 0) iniciada");
     while (true) {
         if (WiFi.status() == WL_CONNECTED) {
             telegramLoop();
@@ -23,18 +25,37 @@ void tareaTelegram(void *pvParameters) {
 }
 
 void tareaModbusBombas(void *pvParameters) {
-    //Serial.println("→ Tarea Modbus + Bombas (Core 1) iniciada");
+    // 1. Declarar las variables estáticas AQUÍ, antes del while
+    static unsigned long lastBombas = 0;
+    static unsigned long lastIO = 0;
+    static unsigned long lastFailsafe = 0;
+
+    Serial.println("→ Tarea Modbus + Bombas (Core 1) iniciada");
     while (true) {
         modbusTask();
         procesarModbus();
 
         // Lógica de bombas MUY lenta temporalmente (cada 30 segundos)
-        static unsigned long lastBombas = 0;
         if (millis() - lastBombas >= 30000) {
             leerEstadosBombas();
             logicaBombas();
             actualizarEstados();
             lastBombas = millis();
+        }
+
+        // Lógica de entradas salidas cada 500ms
+        if (millis() - lastIO >= 500) {
+            leerEntradas();
+            actualizarSalidas();
+            lastIO = millis();
+        }
+
+        // 2. Lógica de Failsafe (cada 1 hora = 3600000 ms)[cite: 2]
+        if (millis() - lastFailsafe >= 3600000) {
+            if (WiFi.status() == WL_CONNECTED) {
+                checkEmergencyUpdate(); 
+            }
+            lastFailsafe = millis();
         }
 
         esp_task_wdt_reset();
@@ -44,9 +65,10 @@ void tareaModbusBombas(void *pvParameters) {
 }
 
 void appInit() {
-    //Serial.begin(115200);
-    //delay(2000);
-    //Serial.println("\n=== SISTEMA INICIANDO - DUAL CORE v4 (Conservador) ===");
+    inicializarEntradasSalidas();
+    Serial.begin(115200);
+    delay(2000);
+    Serial.println("\n=== SISTEMA INICIANDO - DUAL CORE v4 (Conservador) ===");
 
     WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
     WiFi.begin(ssid, password);
@@ -56,6 +78,10 @@ void appInit() {
     unsigned long start = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - start < 20000) {
         delay(100);
+    }
+// --- LLAMADA DE EMERGENCIA AL ARRANCAR ---
+    if (WiFi.status() == WL_CONNECTED) {
+        checkEmergencyUpdate(); // Si hay versión nueva, se reinicia aquí mismo[cite: 2]
     }
 
     telegramInit();

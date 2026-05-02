@@ -1,8 +1,8 @@
 #include "commands.h"
-#include "telegram/bot.h"
+#include "utils/ota_utils.h"
+#include "io/io.h"
 #include "bombas/bombas.h"
 #include "telegram/bot.h"
-#include "utils/cola.h"
 #include "modbus/modbus_mgr.h"
 #include <EEPROM.h>
 #include <HTTPUpdate.h>
@@ -10,7 +10,7 @@
 #include "config/variables.h"  
 #include "utils/cola.h"   // Para colaMsj, colaMb, etc.
 
-static void updateFirmware(String url, String chat_id);
+//static void updateFirmware(String url, String chat_id);
 
 // Función auxiliar para enviar respuestas (ya existe en tu utils/cola)
 extern void colaMsj(String chat_id, String texto);
@@ -36,6 +36,7 @@ static void processModoATSCommand(String argument, String chat_id);
 
 void processCommand(String command, String chat_id) {
   command.trim();
+  command.toLowerCase();
   //Serial.println("Comando recibido: " + command);
 
   // Procesar comandos simples
@@ -44,10 +45,10 @@ if (command == "/version") {
     return;
 }
 
+/*
 if (command == "/entradas") {
     // Generar mensaje con estados ON/OFF
     String mensaje = "Estado de las entradas:\n";
-    /*
     mensaje += "Lin: " + String(Lin ? "ON   ✅" : "OFF  ❌") + "\n";
     mensaje += "Oin: " + String(Oin ? "ON   ✅" : "OFF  ❌") + "\n";
     mensaje += "Gin: " + String(Gin ? "ON   ✅" : "OFF  ❌") + "\n";
@@ -63,7 +64,6 @@ if (command == "/entradas") {
         binario = "0" + binario;
     }
     mensaje += "\nValor binario: " + binario;
-    */
     colaMsj(chat_id, mensaje);
     
     return;
@@ -89,20 +89,16 @@ if (command == "/salidas") {
         binario = "0" + binario;
     }
     mensaje += "\n\nValor binario: " + binario;
-    */
     colaMsj(chat_id, mensaje);
     
     return;
 }
-  
-  if (command == "/update") {
-    /* 
-    lastUpdateId = updateId;
-    saveLastUpdateId(lastUpdateId);
-    delay(5);
-    processUpdateCommand("https://raw.githubusercontent.com/figjosem/TableroBombas/refs/heads/main/bin/Bombas.bin", chat_id);
-    */
-    return;
+*/  
+
+  // Dentro de tu lógica de procesamiento de comandos de Telegram
+  if (command == "/io") {
+      String respuesta = obtenerResumenIO();
+      colaMsj(chat_id, respuesta);
   }
 
   if (command == "/reset") {
@@ -143,7 +139,7 @@ if (command == "/salidas") {
     else if (action == "/read") {
       processReadCommand(argument, chat_id);
     } 
-    else if (action == "/modoATS") {
+    else if (action == "/modoats") {
       processModoATSCommand(argument, chat_id);
     } 
     else if (action == "/update") {
@@ -209,14 +205,37 @@ void processReadCommand(String argument, String chat_id) {
 }
 
 void processModoATSCommand(String argument, String chat_id) {
-  //int modbusAddress = argument.toInt();
-  if (argument == "estado") {
-   colaMsj(chat_id, "ATS en modo " + modoATS + " CicloATS: " + String(CicloATS) + ", CicloGrupo: " + String(cicloGrupo)); 
-      
-  } else {
-  modoATS = argument;
-   colaMsj(chat_id, "ATS en modo " + argument );
-}
+    argument.toLowerCase();
+    
+    // Reset de salidas de control ATS antes de aplicar el nuevo modo
+    RL = false; RG = false; RO = false;
+
+    if (argument == "auto") {
+        modoATS = "AUTO";
+        // En AUTO, todas las salidas de control manual van a LOW
+        actualizarSalidas();
+        colaMsj(chat_id, "ATS: Modo AUTOMÁTICO habilitado 🤖");
+    } 
+    else if (argument == "grupo") {
+        modoATS = "GRUPO (MANUAL)";
+        RG = true; 
+        actualizarSalidas();
+        colaMsj(chat_id, "ATS: Forzando cambio a GRUPO ⚡");
+    } 
+    else if (argument == "off") {
+        modoATS = "OFF (DESCONECTADO)";
+        RO = true;
+        actualizarSalidas();
+        colaMsj(chat_id, "ATS: Sistema DESCONECTADO (Posición 0) 🛑");
+    }
+    else if (argument == "estado") {
+        String st = "📊 *ESTADO ATS*\n";
+        st += "• Modo: " + modoATS + "\n";
+        st += "• Red (Lok): " + String(Lok ? "✅ OK" : "❌ CAÍDA") + "\n";
+        st += "• Grupo (Gok): " + String(Gok ? "✅ OK" : "⚪ OFF") + "\n";
+        st += "• Posición Actual: " + String(Lin ? "LÍNEA" : (Gin ? "GRUPO" : (Oin ? "CERO (0)" : "TRANSICIÓN")));
+        colaMsj(chat_id, st);
+    }
 }
 
 // Nueva función para procesar solo la selección de bomba activa
@@ -248,22 +267,32 @@ void processBombaCommand(String argument, String chat_id) {
     modbusBbaActiva = modbus_id;
     colaMsj(chat_id, "Bomba " + nroStr + " activada.", "");
   }
-  else*/else if (comStr == "on") {
+  else*/
+  else if (comStr == "on") {
     int idx = bomba_id - 1;
-    if (bombas[idx].enc) {
-        bombas[idx].autom = false; // Bloqueamos el automatismo para esta bomba
+
+    // 1. Validamos seguridad de agua (Flotante)
+    if (!Fok) {
+        mensaje = "❌ Error: Nivel crítico (Flotante OK: NO). No se puede iniciar marcha.";
+    } 
+    // 2. Validamos comunicación con el variador
+    else if (!bombas[idx].enc) {
+        mensaje = "⚠️ Error: El variador " + nroStr + " no está comunicado.";
+    } 
+    // 3. Ejecutamos encendido manual si todo está OK
+    else {
+        bombas[idx].autom = false; // Bloqueamos el automatismo[cite: 1]
         bombas[idx].marcha = true;
         
-        // Generamos el comando Modbus de ESCRITURA inmediato
-        // Registro 8192, Valor 1 (Marcha)
-        colaMb(bomba_id, 8192, chat_id, 1, false, nullptr);//[cite: 2]
+        // Comando Modbus de ESCRITURA inmediato (Registro 8192, Valor 1)
+        colaMb(bomba_id, 8192, chat_id, 1, false, nullptr);//[cite: 1]
         
-        mensaje = "Bomba " + nroStr + " en MANUAL: Iniciando marcha...";
-    } else {
-        mensaje = "⚠️ Error: El variador " + nroStr + " no está comunicado.";
+        mensaje = "Bomba " + nroStr + " en MANUAL: Iniciando marcha... ✅";
     }
-    colaMsj(chat_id, mensaje);
+    
+    colaMsj(chat_id, mensaje);//[cite: 1]
 }
+
   else if (comStr == "off") {
      // Detiene la bomba
     // Aquí puedes llamar a una función que detenga la bomba
@@ -288,12 +317,32 @@ void processBombaCommand(String argument, String chat_id) {
     colaMsj(chat_id, "Bomba " + nroStr + " autom.");
   }
   else if (comStr == "estado") {
-    String mensaje = "Bomba " + String(bomba_id) + "\n";
+    /*String mensaje = "Bomba " + String(bomba_id) + "\n";
     mensaje += "• Modo: " + String(bombas[(bomba_id-1)].autom ? "AUTO" : bombas[(bomba_id-1)].marcha ? "ON" : "OFF") + "\n";
     mensaje += "• Disponible: " + String(bombas[(bomba_id-1)].dis ? "SÍ ✅" : "NO ❌") + "\n";
-    mensaje += "• Marcha: " + String(bombas[(bomba_id-1)].marcha ? "ACTIVA 🟢" : "DETENIDA 🔴") + "\n";
+    mensaje += "• Marcha: " + String(bombas[(bomba_id-1)].marchaReal ? "ACTIVA 🟢" : "DETENIDA 🔴") + "\n";
     mensaje += "• Conexión: " + String(bombas[(bomba_id-1)].enc ? "ESTABLECIDA 📡" : "FALLIDA ⚠️") + "\n";
-    mensaje += "• Velocidad: " + String(bombas[(bomba_id-1)].vel / 50.0 ,1) + " %";
+    mensaje += "• Velocidad: " + String(bombas[(bomba_id-1)].vel / 50.0 ,1) + " %"; */
+    String mensaje = "Bomba " + String(bomba_id) + "\n";
+
+// 1. MODO: Separamos claramente el estado del selector
+String modoActual = bombas[(bomba_id-1)].autom ? "AUTOMÁTICO 🤖" : (bombas[(bomba_id-1)].marcha ? "MANUAL (ON) 🕹️" : "MANUAL (OFF) 🛑");
+mensaje += "• Modo: " + modoActual + "\n";
+
+// 2. DISPONIBILIDAD: Solo mostramos "SÍ" si está en AUTO y disponible. 
+// Si está en MANUAL, indicamos que está fuera del ciclo automático.
+String dispEstado;
+if (bombas[(bomba_id-1)].autom) {
+    dispEstado = bombas[(bomba_id-1)].dis ? "EN CICLO ✅" : "EXCLUIDA ⚠️";
+} else {
+    dispEstado = "FUERA CICLO 🛠️";
+}
+mensaje += "• Gestión Auto: " + dispEstado + "\n";
+// 3. ESTADO REAL: Lo que realmente está pasando en el contactor/variador
+mensaje += "• Marcha: " + String(bombas[(bomba_id-1)].marchaReal ? "EN MARCHA 🟢" : "PARADA ⚪") + "\n";
+// 4. TELEMETRÍA
+mensaje += "• Conexión: " + String(bombas[(bomba_id-1)].enc ? "OK 📡" : "ERROR MODBUS ⚠️") + "\n";
+mensaje += "• Velocidad: " + String(bombas[(bomba_id-1)].vel / 50.0 ,1) + " %";
 
     colaMsj(chat_id, mensaje);
   }
@@ -323,24 +372,4 @@ uint32_t loadLastUpdateId() {
 }
 
 
-static void updateFirmware(String url, String chat_id) {
-    WiFiClientSecure updateClient;
-    updateClient.setInsecure();
-    
-    t_httpUpdate_return ret = httpUpdate.update(updateClient, url);
-    
-    switch (ret) {
-        case HTTP_UPDATE_FAILED:
-            colaMsj(chat_id, "Error en actualización: " + httpUpdate.getLastErrorString());
-            break;
-        case HTTP_UPDATE_NO_UPDATES:
-            colaMsj(chat_id, "No hay actualizaciones.");
-            break;
-        case HTTP_UPDATE_OK:
-            colaMsj(chat_id, "Actualización OK. Reiniciando...");
-            delay(1000);
-            ESP.restart();
-            break;
-    }
-}
 

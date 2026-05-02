@@ -2,6 +2,8 @@
 #include "config/config.h"
 #include "bombas.h"
 #include "modbus/modbus_mgr.h"
+#include "io/io.h"
+
 
 // Inicialización de variables de tiempo
 void initBombas() {
@@ -230,7 +232,7 @@ void logicaBombas() {
     static unsigned long lastRun = 0;
     
     // === FILTRO CORRECTO: Ejecutar solo cada 15 segundos ===
-    if (millis() - lastRun < 15000) {
+    if (millis() - lastRun < 5000) {
         return;
     }
     lastRun = millis();        // ← Actualizar DESPUÉS de la comprobación
@@ -296,7 +298,7 @@ void logicaBombas() {
             bombas[i].marcha = false; // Solo reseteamos las que están auto
         }
     }
-
+    
     // Asignación de marchas según modo B
     switch (B) {
         case 1: // Una de 15 HP
@@ -322,6 +324,7 @@ void logicaBombas() {
 
     for (int i = 0; i < 3; i++) {
        int comandoDeseado = (bombas[i].marcha) ? 1 : 5;//[cite: 3]
+       if (!Fok) {comandoDeseado = 5;} // Si el flotante no está OK, forzamos parada por seguridad 
        if (comandoDeseado != ultimoComandoEnviado[i]) {
             MsgModbus msg;
             msg.id = i + 1;
@@ -341,19 +344,25 @@ void leerEstadosBombas() {
     static unsigned long lastRun = 0;
     static int indiceBomba = 0;
 
-    if (millis() - lastRun < 15000) return; // Lee cada 15 seg para no saturar
+    if (millis() - lastRun < 5000) return; // Lee cada 15 seg para no saturar
     lastRun = millis();
 
     MsgModbus msg;
     msg.id = indiceBomba + 1; 
-    msg.reg = 12288;
     msg.rx = true;
-    msg.chat_id = "esp32"; // Importante: Si es lectura automática, chat_id vacío para no saturar Telegram
-    msg.destino = &mbBuffer[indiceBomba]; 
+    msg.chat_id = "esp32"; 
 
-    if (encolarModbus(msg)) {
-        indiceBomba = (indiceBomba + 1) % 3; 
-    }
+    // Lectura 1: Estado/Falla (Registro 12288)[cite: 2]
+    msg.reg = 12288;
+    msg.destino = &mbBuffer[indiceBomba]; 
+    encolarModbus(msg);
+
+    // Lectura 2: Velocidad (Registro 4097)[cite: 2]
+    msg.reg = 4097;
+    msg.destino = &bombas[indiceBomba].vel; 
+    encolarModbus(msg);
+
+    indiceBomba = (indiceBomba + 1) % 3;
 }
 
 

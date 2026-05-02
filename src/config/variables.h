@@ -25,7 +25,7 @@ extern IPAddress secondaryDNS;
 extern const String BOTtoken ;
 
 // Variables generales
-#define VERSION "7.13.00"
+#define VERSION "7.13.06"
 
 //extern const int LED_PIN;
 
@@ -74,3 +74,15 @@ extern int B;
 extern uint16_t mbBuffer[3];
 
 extern uint16_t entradasPLC;
+
+
+// Pines 74HC595
+#define DATA_595 13
+#define LATCH_595 14
+#define CLOCK_595 27
+#define OE_595 4
+
+// Pines 74HC165
+#define DATA_165 5
+#define LOAD_165 16
+#define CLOCK_165 17
