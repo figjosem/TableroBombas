@@ -367,6 +367,7 @@ void leerEstadosBombas() {
         msg.reg = 4107;
         msg.destino = &bombas[indiceBomba].presion; 
     }
+    leerPresionVel = !leerPresionVel; // Alterna entre velocidad y presión cada ciclo
     
     encolarModbus(msg);
 
