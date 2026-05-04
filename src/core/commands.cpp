@@ -121,6 +121,19 @@ if (command == "/salidas") {
     return;
   }
 
+  if (command == "/presion") {
+    
+    String mensaje = "📊 *Monitoreo de Presión*\n";
+    mensaje += "• Voltaje V1: " + String(espPresion.v_RealV1, 2) + " V\n";
+    mensaje += "• Presión: " + String(espPresion.presionEsp, 2) + " bar\n";
+    
+    // Si también quieres mostrar el SetPoint que tienes guardado:
+    mensaje += "• SetPoint: " + String(presionSetPoint, 2) + " bar";
+
+    colaMsj(chat_id, mensaje);
+    return;
+  }
+
   /*if (command == "/grupoOn") {
     lastUpdateId = updateId;
     saveLastUpdateId(lastUpdateId);
@@ -264,6 +277,7 @@ void processBombaCommand(String argument, String chat_id) {
   
   // Convertir a números
    int bomba_id = (uint8_t)(nroStr.toInt()); // nro de bomba
+   
  
   // Verifica que el número de bomba esté en el rango válido (1 a 3, por ejemplo)
   if (bomba_id < 1 || bomba_id > 3) {
@@ -271,15 +285,15 @@ void processBombaCommand(String argument, String chat_id) {
     return;
   }
   
+  bool modoTablero = bombas[(bomba_id - 1)].modoTablero; 
  /* if (comStr == "activa") {
     // Seleccionar la bomba activa: se cambia el esclavo Modbus
     modbusBbaActiva = modbus_id;
     colaMsj(chat_id, "Bomba " + nroStr + " activada.", "");
   }
   else*/
-  else if (comStr == "on") {
+  if (comStr == "on") {
     int idx = bomba_id - 1;
-
     // 1. Validamos seguridad de agua (Flotante)
     if (!Fok) {
         mensaje = "❌ Error: Nivel crítico (Flotante OK: NO). No se puede iniciar marcha.";
@@ -309,6 +323,7 @@ void processBombaCommand(String argument, String chat_id) {
         if (bombas[(bomba_id-1)].enc) {
           bombas[(bomba_id-1)].autom = false;
           bombas[(bomba_id-1)].marcha = false;
+          bombas[(bomba_id-1)].modoTablero = false;    
           bombas[(bomba_id-1)].dis = false;
           if ((bomba_id-1) == bombaActiva) bombaActiva = -1;
           colaMsj(chat_id, "Bomba " + nroStr + " detenida.");
@@ -322,8 +337,17 @@ void processBombaCommand(String argument, String chat_id) {
     // Aquí puedes llamar a una función que habilite la bomba
     bombas[(bomba_id-1)].autom = true;
     bombas[(bomba_id-1)].marcha = false;
+    bombas[(bomba_id-1)].modoTablero = false;    
     bombas[(bomba_id-1)].dis = true;
     colaMsj(chat_id, "Bomba " + nroStr + " autom.");
+  }
+  else if (comStr == "tablero") {
+    // Aquí puedes llamar a una función que habilite la bomba
+    bombas[(bomba_id-1)].autom = false;
+    bombas[(bomba_id-1)].marcha = false;
+    bombas[(bomba_id-1)].modoTablero = true;    
+    bombas[(bomba_id-1)].dis = true;
+    colaMsj(chat_id, "Bomba " + nroStr + " control desde TABLERO.");
   }
   else if (comStr == "estado") {
     /*String mensaje = "Bomba " + String(bomba_id) + "\n";
@@ -332,32 +356,53 @@ void processBombaCommand(String argument, String chat_id) {
     mensaje += "• Marcha: " + String(bombas[(bomba_id-1)].marchaReal ? "ACTIVA 🟢" : "DETENIDA 🔴") + "\n";
     mensaje += "• Conexión: " + String(bombas[(bomba_id-1)].enc ? "ESTABLECIDA 📡" : "FALLIDA ⚠️") + "\n";
     mensaje += "• Velocidad: " + String(bombas[(bomba_id-1)].vel / 50.0 ,1) + " %"; */
-    String mensaje = "Bomba " + String(bomba_id) + "\n";
+    
+int idx = bomba_id - 1;
+String mensaje = "Bomba " + String(bomba_id) + "\n";
 
-// 1. MODO: Separamos claramente el estado del selector
-String modoActual = bombas[(bomba_id-1)].autom ? "AUTOMÁTICO 🤖" : (bombas[(bomba_id-1)].marcha ? "MANUAL (ON) 🕹️" : "MANUAL (OFF) 🛑");
-mensaje += "• Modo: " + modoActual + "\n";
-
-// 2. DISPONIBILIDAD: Solo mostramos "SÍ" si está en AUTO y disponible. 
-// Si está en MANUAL, indicamos que está fuera del ciclo automático.
-String dispEstado;
-if (bombas[(bomba_id-1)].autom) {
-    dispEstado = bombas[(bomba_id-1)].dis ? "EN CICLO ✅" : "EXCLUIDA ⚠️";
+// 1. CONTROL: Prioridad Tablero > Auto > Manual
+String controlEstado;
+if (bombas[idx].modoTablero) {
+    controlEstado = "TABLERO 🏗️";
+} else if (bombas[idx].autom) {
+    controlEstado = "AUTO 🤖";
 } else {
-    dispEstado = "FUERA CICLO 🛠️";
+    controlEstado = "MANUAL (" + String(bombas[idx].marcha ? "ON 🕹️" : "OFF 🛑") + ")";
 }
-mensaje += "• Gestión Auto: " + dispEstado + "\n";
-// 3. ESTADO REAL: Lo que realmente está pasando en el contactor/variador
-mensaje += "• Marcha: " + String(bombas[(bomba_id-1)].marchaReal ? "EN MARCHA 🟢" : "PARADA ⚪") + "\n";
-// 4. TELEMETRÍA
-mensaje += "• Conexión: " + String(bombas[(bomba_id-1)].enc ? "OK 📡" : "ERROR MODBUS ⚠️") + "\n";
-mensaje += "• Velocidad: " + String(bombas[(bomba_id-1)].vel / 50.0 ,1) + " %";
+mensaje += "Control: " + controlEstado + "\n";
 
-    colaMsj(chat_id, mensaje);
+// 2. MARCHA REAL: Confirmación desde el variador
+mensaje += "Marcha: " + String(bombas[idx].marchaReal ? "EN MARCHA 🟢" : "PARADA ⚪") + "\n";
+
+// 3. CONEXIÓN: Estado del bus Modbus
+mensaje += "Conexión: " + String(bombas[idx].enc ? "OK 📡" : "ERROR MODBUS ⚠️") + "\n";
+
+// 4. TELEMETRÍA: Velocidad y Presión calculada
+mensaje += "Velocidad: " + String(bombas[idx].vel / 50.0, 1) + " %\n";
+
+// Cálculo de Presión: P = (Bruto - 200) * 1.25 / 100
+float pCalculada = 0.00;
+if (bombas[idx].presion > 200) {
+    pCalculada = (bombas[idx].presion - 200) * 1.25 / 100.0;
+}
+mensaje += "Presión: " + String(pCalculada, 2) + " bar 📈";
+
+colaMsj(chat_id, mensaje);
+
   }
   else {
     colaMsj(chat_id, "Error: comando de bomba no reconocido.");
   }
+  if (modoTablero != bombas[(bomba_id-1)].modoTablero) {
+    MsgModbus msg;
+            msg.id = bomba_id;
+            msg.reg = 61442; // P0.02 = 1=tablero 2=modbus
+            msg.rx = false; 
+            msg.data = bombas[(bomba_id-1)].modoTablero ? 1 : 2;
+            msg.destino = nullptr;
+            encolarModbus(msg);
+  }
+    
   guardarConfiguracion(); // Guardamos cualquier cambio en la configuración persistente
 
 }

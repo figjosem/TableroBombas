@@ -30,9 +30,12 @@ extern IPAddress secondaryDNS;
 extern const String BOTtoken ;
 
 // Variables generales
-#define VERSION "7.13.06"
+#define VERSION "7.13.07"
+
+#define PIN_V1 32
 
 //extern const int LED_PIN;
+
 
 extern WiFiClientSecure client; 
 extern uint16_t param;
@@ -50,7 +53,13 @@ extern bool restart;
 
 //<<<<extern std::queue<MensajeTelegram> colaMensajes;
 // extern std::queue<MsgModbus> colaModbus;  // ELIMINAR esta línea
+struct lectPresion {
+  float v_RealV1;
+  float rawV1;
+  float presionEsp;
+};
 
+extern lectPresion espPresion;
 
 // --- Estructura bomba ---
 struct EstadoBomba {
@@ -59,8 +68,10 @@ struct EstadoBomba {
   bool dis;
   bool marcha;
   bool marchaReal;
+  bool modoTablero;
   uint32_t horas;
-  uint16_t vel;  
+  uint16_t vel;
+  uint16_t presion;  
 };
 
 extern uint16_t regEstadoVariador;

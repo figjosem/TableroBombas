@@ -90,6 +90,14 @@ void leerEntradas() {
     Gok = entrada_165 & (1 << 4); // Bit 4
     Fok = entrada_165 & (1 << 5); // Bit 5
     Man = entrada_165 & (1 << 6); // Bit 6[cite: 2]
+    
+    
+    espPresion.rawV1 = (0.9f * espPresion.rawV1) + (0.1f * (float)analogRead(PIN_V1)) ; // Lectura analógica para presión
+   
+    espPresion.v_RealV1 =  (espPresion.rawV1 * 17.49f) / 4095.0f ; // Factor del divisor R11/R2
+    espPresion.presionEsp = (espPresion.v_RealV1 -2.0f) * 1.25f;
+    
+
 }
 
 String obtenerResumenIO() {

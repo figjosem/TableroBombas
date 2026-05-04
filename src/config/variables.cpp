@@ -5,12 +5,13 @@
 // --- Instancias reales ---
 EstadoBomba bombas[3];
 
-float presionSetPoint = 2.5;       //
+float presionSetPoint = 1.00;       //
 uint32_t horasBomba[3] = {0, 0, 0}; //
 Preferences prefs;
 
 uint16_t regEstadoVariador = 0;
 
+lectPresion espPresion;
 
 const int LED_PIN = 2;
 

@@ -1,4 +1,4 @@
-#include "variables.h"
+#include "config/variables.h"
 #include <queue>
 
 const char* ssid = "AACSA 2.4"; //"ClaroFibra467";
@@ -14,12 +14,13 @@ IPAddress secondaryDNS(8, 8, 4, 4);
 unsigned long lastUpdateTime = millis(); // Variable para controlar el tiempo
 uint16_t valorLeido = 0;
 
+lectPresion espPresion;
+
 std::queue<MensajeTelegram> colaMensajes;
 std::queue<MsgModbus> colaModbus;
 
 const String BOTtoken = "8141829096:AAEOBTq9R9oluiCmetI4RcZPZQSYxI0fYrg";
 WiFiClientSecure client;
-UniversalTelegramBot bot(BOTtoken, client);
 
 ModbusRTU modbus ;//(&Serial1, RE_PIN);      // Reemplazar ModbusMaster node; ModbusMaster node;
 volatile Modbus::ResultCode ultimaTransaccionEvent ; // Inicializa con un valor no usado

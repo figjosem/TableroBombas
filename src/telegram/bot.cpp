@@ -27,32 +27,6 @@ String urlencode(String str) {
     return encoded;
 }
 
-// Función auxiliar para peticiones HTTP con cliente SSL temporal
-/*bool httpGetTelegram(const String &url, String &payload, int retries = 1) {
-    for (int i = 0; i <= retries; i++) {
-        WiFiClientSecure *client = new WiFiClientSecure();
-        client->setInsecure();
-        HTTPClient http;
-        bool success = false;
-        if (http.begin(*client, url)) {
-            http.setTimeout(12000); // 12 segundos para handshake SSL lento
-            int httpCode = http.GET();
-            if (httpCode == 200) {
-                payload = http.getString();
-                success = true;
-            }
-            http.end();
-        }
-        client->stop();
-        delete client;
-        delay(20);
-        yield();
-        if (success) return true;
-        if (i < retries) delay(50); // Pausa antes de reintentar
-    }
-    return false;
-}
-*/
 // Reemplaza tu httpGetTelegram por esta versión ultra-segura
 bool httpGetTelegram(const String &url, String &payload, int retries = 1) {
     for (int i = 0; i <= retries; i++) {

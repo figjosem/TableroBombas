@@ -323,8 +323,8 @@ void logicaBombas() {
     static int ultimoComandoEnviado[3] = {-1, -1, -1};
 
     for (int i = 0; i < 3; i++) {
-       int comandoDeseado = (bombas[i].marcha) ? 1 : 5;//[cite: 3]
-       if (!Fok) {comandoDeseado = 5;} // Si el flotante no está OK, forzamos parada por seguridad 
+       int comandoDeseado = (bombas[i].marcha) ? 1 : 6;//[cite: 3]
+       if (!Fok) {comandoDeseado = 6;} // Si el flotante no está OK, forzamos parada por seguridad 
        if (comandoDeseado != ultimoComandoEnviado[i]) {
             MsgModbus msg;
             msg.id = i + 1;
@@ -343,6 +343,7 @@ void logicaBombas() {
 void leerEstadosBombas() {
     static unsigned long lastRun = 0;
     static int indiceBomba = 0;
+    static bool leerPresionVel = false; 
 
     if (millis() - lastRun < 5000) return; // Lee cada 15 seg para no saturar
     lastRun = millis();
@@ -358,8 +359,15 @@ void leerEstadosBombas() {
     encolarModbus(msg);
 
     // Lectura 2: Velocidad (Registro 4097)[cite: 2]
-    msg.reg = 4097;
-    msg.destino = &bombas[indiceBomba].vel; 
+    
+    if (!leerPresionVel) {
+        msg.reg = 4097;
+        msg.destino = &bombas[indiceBomba].vel; 
+    } else {
+        msg.reg = 4107;
+        msg.destino = &bombas[indiceBomba].presion; 
+    }
+    
     encolarModbus(msg);
 
     indiceBomba = (indiceBomba + 1) % 3;

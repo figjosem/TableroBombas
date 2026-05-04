@@ -76,7 +76,7 @@ extern uint16_t registroLectura ;
 
 extern const String BOTtoken;
 extern WiFiClientSecure client;
-extern UniversalTelegramBot bot;
+//extern UniversalTelegramBot bot;
 extern ModbusRTU modbus; // Declaración externa
 //extern ModbusMaster node;
 extern  uint16_t param;
