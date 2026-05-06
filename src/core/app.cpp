@@ -8,6 +8,7 @@
 #include "telegram/bot.h"
 #include "commands.h"
 #include "esp_task_wdt.h"
+#include "utils/telemetria.h"
 
 void tareaTelegram(void *pvParameters) {
     Serial.println("→ Tarea Telegram (Core 0) iniciada");
@@ -15,6 +16,7 @@ void tareaTelegram(void *pvParameters) {
         if (WiFi.status() == WL_CONNECTED) {
             telegramLoop();
             telegramProcessQueue();
+            enviarHeartbeatHC();
         } else {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }

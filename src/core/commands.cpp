@@ -46,57 +46,8 @@ if (command == "/version") {
     return;
 }
 
-/*
-if (command == "/entradas") {
-    // Generar mensaje con estados ON/OFF
-    String mensaje = "Estado de las entradas:\n";
-    mensaje += "Lin: " + String(Lin ? "ON   ✅" : "OFF  ❌") + "\n";
-    mensaje += "Oin: " + String(Oin ? "ON   ✅" : "OFF  ❌") + "\n";
-    mensaje += "Gin: " + String(Gin ? "ON   ✅" : "OFF  ❌") + "\n";
-    mensaje += "Lok: " + String(Lok ? "ON   ✅" : "OFF  ❌") + "\n";
-    mensaje += "Gok: " + String(Gok ? "ON   ✅" : "OFF  ❌") + "\n";
-    mensaje += "Fok: " + String(Fok ? "ON   ✅" : "OFF  ❌") + "\n";
-    mensaje += "Man: " + String(Man ? "ON  ✅" : "OFF ❌") + "\n";
-    
-    // Opcional: mantener también la representación binaria
-    String binario = String(entrada_165, BIN);
-    
-    while (binario.length() < 8) {
-        binario = "0" + binario;
-    }
-    mensaje += "\nValor binario: " + binario;
-    colaMsj(chat_id, mensaje);
-    
-    return;
-}
 
-if (command == "/salidas") {
-    
-    String mensaje = "Estado de las salidas:\n";/*
-    mensaje += "RL:    " + String(RL ? "ON  ✅" : "OFF ❌") + "\n";
-    mensaje += "RO:    " + String(RO ? "ON  ✅" : "OFF ❌") + "\n";
-    mensaje += "RG:    " + String(RG ? "ON  ✅" : "OFF ❌") + "\n";
-    mensaje += "CTO:  " + String(CTO ? "ON  ✅" : "OFF ❌") + "\n";
-    mensaje += "PRE:  " + String(PRE ? "ON  ✅" : "OFF ❌") + "\n";
-    mensaje += "ARR: " + String(ARR ? "ON  ✅" : "OFF ❌") + "\n";
-//    mensaje += "Salida7: " + String("OFF") + "\n";  // Siempre OFF según tu código
-//    mensaje += "Salida8: " + String("ON");         // Siempre ON según tu código
-
-    // Opcional: mostrar también el valor binario del byte de salidas
-    byte salidasByte = (RL << 0) | (RO << 1) | (RG << 2) | (CTO << 3) | 
-                      (PRE << 4) | (ARR << 5) | (false << 6) | (true << 7);
-    String binario = String(salidasByte, BIN);
-    while (binario.length() < 8) {
-        binario = "0" + binario;
-    }
-    mensaje += "\n\nValor binario: " + binario;
-    colaMsj(chat_id, mensaje);
-    
-    return;
-}
-*/  
-
-  // Dentro de tu lógica de procesamiento de comandos de Telegram
+// Dentro de tu lógica de procesamiento de comandos de Telegram
   if (command == "/io") {
       String respuesta = obtenerResumenIO();
       colaMsj(chat_id, respuesta);
@@ -120,15 +71,35 @@ if (command == "/salidas") {
     
     return;
   }
+if (command == "/presion") {
+    float sumaPresiones = 0;
+    int bombasContadas = 0;
 
-  if (command == "/presion") {
-    
+    // Recorremos las bombas para promediar solo las activas
+    for (int i = 0; i < 3; i++) {
+        // Solo sumamos si la bomba está comunicada (enc) y en marcha
+        if (bombas[i].enc && bombas[i].marcha) {
+            // Asumiendo que cada objeto bomba tiene su propia lectura 'presion'
+            // Si la lectura es global (un solo sensor), usa espPresion.presionEsp
+            sumaPresiones += bombas[i].presion; 
+            bombasContadas++;
+        }
+    }
+
+    float promedio = (bombasContadas > 0) ? (sumaPresiones / bombasContadas) : 0;
+
     String mensaje = "📊 *Monitoreo de Presión*\n";
+    mensaje += "----------------------------\n";
     mensaje += "• Voltaje V1: " + String(espPresion.v_RealV1, 2) + " V\n";
-    mensaje += "• Presión: " + String(espPresion.presionEsp, 2) + " bar\n";
+    mensaje += "• Presión Instantánea: " + String(espPresion.presionEsp, 2) + " bar\n";
     
-    // Si también quieres mostrar el SetPoint que tienes guardado:
-    mensaje += "• SetPoint: " + String(presionSetPoint, 2) + " bar";
+    if (bombasContadas > 0) {
+        mensaje += "• Promedio (" + String(bombasContadas) + " bombas): " + String(promedio, 2) + " bar\n";
+    } else {
+        mensaje += "• Promedio: (Sin bombas en marcha)\n";
+    }
+
+    mensaje += "🎯 SetPoint: " + String(presionSetPoint, 2) + " bar";
 
     colaMsj(chat_id, mensaje);
     return;
@@ -167,6 +138,35 @@ if (command == "/salidas") {
       delay(5);
       processUpdateCommand(argument, chat_id);
     } 
+
+    // NUEVO COMANDO: /setpresion n.n
+    else if (action == "/setpresion") {
+      float nuevaP = argument.toFloat();
+      
+      // Validación de rango de seguridad para la planta
+      if (nuevaP >= 0.5 && nuevaP <= 2.0) {
+          // Cálculo inverso: Bruto = ((P * 100) / 1.25) + 200
+          int valorEscribir = (int)((nuevaP * 100.0) / 1.25) + 200;
+
+          // Enviamos a los registros F500h + 18 (62738) y F500h + 20 (62740)
+          // Se asume que escribís a todas las bombas que estén comunicadas
+          for (int i = 0; i < 3; i++) {
+              if (bombas[i].enc) {
+                  colaMb(i + 1, 62738, chat_id, (valorEscribir - 10), false, nullptr);
+                  colaMb(i + 1, 62740, chat_id, (valorEscribir + 10), false, nullptr);
+              }
+          }
+
+          presionSetPoint = nuevaP; // Actualiza variable global
+          guardarConfiguracion();   // Persistencia en Preferences
+          
+          String confirm = "✅ Presión seteada en " + String(nuevaP, 2) + " bar.\n";
+          confirm += "⚙️ Modbus bruto: " + String(valorEscribir);
+          colaMsj(chat_id, confirm);
+      } else {
+          colaMsj(chat_id, "❌ Error: Valor fuera de rango (0.5 - 2.0 bar).");
+      }
+    }
     else {
       colaMsj(chat_id, "Error: comando no reconocido.");
     }
@@ -432,37 +432,44 @@ uint32_t loadLastUpdateId() {
 
 
 void guardarConfiguracion() {
-    prefs.begin("config", false); // "config" es el nombre del espacio, false = lectura/escritura
+    prefs.begin("config", false); 
     
-    // Guardar estados de bombas
     for (int i = 0; i < 3; i++) {
+        // Claves para estados (autom, marcha, modoTablero)
         String p_autom = "b" + String(i) + "a";
         String p_marcha = "b" + String(i) + "m";
+        String p_tablero = "b" + String(i) + "t";
+        // Clave para horas (ej: "b0h", "b1h", "b2h")
+        String p_horas = "b" + String(i) + "h"; 
+        
         prefs.putBool(p_autom.c_str(), bombas[i].autom);
         prefs.putBool(p_marcha.c_str(), bombas[i].marcha);
+        prefs.putBool(p_tablero.c_str(), bombas[i].modoTablero);
+        prefs.putUInt(p_horas.c_str(), bombas[i].horas); // Guardamos horas de CADA bomba
     }
 
-    // Guardar otros seteos
-    prefs.putString("modoATS", modoATS);
     prefs.putFloat("presionSet", presionSetPoint);
-    prefs.putUInt("horasB1", bombas[0].horas);
+    // modoATS no se guarda para que siempre inicie en AUTO tras un reinicio
     prefs.end();
 }
 
 void cargarConfiguracion() {
-    prefs.begin("config", true); // true = modo solo lectura
+    prefs.begin("config", true);
     
     for (int i = 0; i < 3; i++) {
         String p_autom = "b" + String(i) + "a";
         String p_marcha = "b" + String(i) + "m";
-        // Si no existe el valor, usamos false por defecto
+        String p_tablero = "b" + String(i) + "t";
+        String p_horas = "b" + String(i) + "h";
+        
         bombas[i].autom = prefs.getBool(p_autom.c_str(), false);
         bombas[i].marcha = prefs.getBool(p_marcha.c_str(), false);
+        bombas[i].modoTablero = prefs.getBool(p_tablero.c_str(), false);
+        bombas[i].horas = prefs.getUInt(p_horas.c_str(), 0); // Cargamos horas de cada una
     }
 
-    modoATS = prefs.getString("modoATS", "AUTO");
-    presionSetPoint = prefs.getFloat("presionSet", 2.5); // Valor por defecto 2.5 bar
+    modoATS = "AUTO"; 
+    presionSetPoint = prefs.getFloat("presionSet", 0.8);
     
     prefs.end();
 }
-
