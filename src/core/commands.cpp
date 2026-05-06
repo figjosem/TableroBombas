@@ -78,7 +78,7 @@ if (command == "/presion") {
     // Recorremos las bombas para promediar solo las activas
     for (int i = 0; i < 3; i++) {
         // Solo sumamos si la bomba está comunicada (enc) y en marcha
-        if (bombas[i].enc && bombas[i].marcha) {
+        if (bombas[i].enc ) {
             // Asumiendo que cada objeto bomba tiene su propia lectura 'presion'
             // Si la lectura es global (un solo sensor), usa espPresion.presionEsp
             sumaPresiones += bombas[i].presion; 
@@ -94,7 +94,7 @@ if (command == "/presion") {
     mensaje += "• Presión Instantánea: " + String(espPresion.presionEsp, 2) + " bar\n";
     
     if (bombasContadas > 0) {
-        mensaje += "• Promedio (" + String(bombasContadas) + " bombas): " + String(promedio, 2) + " bar\n";
+        mensaje += "• Promedio (" + String(bombasContadas) + " bombas): " + String(((promedio - 200.0) * 1.25 / 100.0) , 2) + " bar\n";
     } else {
         mensaje += "• Promedio: (Sin bombas en marcha)\n";
     }
@@ -152,8 +152,8 @@ if (command == "/presion") {
           // Se asume que escribís a todas las bombas que estén comunicadas
           for (int i = 0; i < 3; i++) {
               if (bombas[i].enc) {
-                  colaMb(i + 1, 62738, chat_id, (valorEscribir - 10), false, nullptr);
-                  colaMb(i + 1, 62740, chat_id, (valorEscribir + 10), false, nullptr);
+                  colaMb(i + 1, 62738, "esp32", (valorEscribir - 10), false, nullptr);
+                  colaMb(i + 1, 62740, "esp32", (valorEscribir + 10), false, nullptr);
               }
           }
 
@@ -308,7 +308,7 @@ void processBombaCommand(String argument, String chat_id) {
         bombas[idx].marcha = true;
         
         // Comando Modbus de ESCRITURA inmediato (Registro 8192, Valor 1)
-        colaMb(bomba_id, 8192, chat_id, 1, false, nullptr);//[cite: 1]
+        colaMb(bomba_id, 8192, "esp32", 1, false, nullptr);//[cite: 1]
         
         mensaje = "Bomba " + nroStr + " en MANUAL: Iniciando marcha... ✅";
     }
