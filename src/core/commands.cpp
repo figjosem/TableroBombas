@@ -144,7 +144,7 @@ if (command == "/presion") {
       float nuevaP = argument.toFloat();
       
       // Validación de rango de seguridad para la planta
-      if (nuevaP >= 0.5 && nuevaP <= 2.0) {
+      if (nuevaP >= 0.5 && nuevaP < 2.0) {
           // Cálculo inverso: Bruto = ((P * 100) / 1.25) + 200
           int valorEscribir = (int)((nuevaP * 100.0) / 1.25) + 200;
 
@@ -152,8 +152,8 @@ if (command == "/presion") {
           // Se asume que escribís a todas las bombas que estén comunicadas
           for (int i = 0; i < 3; i++) {
               if (bombas[i].enc) {
-                  colaMb(i + 1, 62738, "esp32", (valorEscribir - 10), false, nullptr);
-                  colaMb(i + 1, 62740, "esp32", (valorEscribir + 10), false, nullptr);
+                  colaMb(i + 1, 62738, "esp32", (valorEscribir - 6), false, nullptr);
+                  colaMb(i + 1, 62740, "esp32", (valorEscribir + 14), false, nullptr);
               }
           }
 
