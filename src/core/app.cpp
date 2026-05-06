@@ -38,7 +38,7 @@ void tareaModbusBombas(void *pvParameters) {
         procesarModbus();
 
         // Lógica de bombas MUY lenta temporalmente (cada 30 segundos)
-        if (millis() - lastBombas >= 30000) {
+        if (millis() - lastBombas >= 2000) {
             leerEstadosBombas();
             logicaBombas();
             actualizarEstados();
@@ -62,7 +62,7 @@ void tareaModbusBombas(void *pvParameters) {
 
         esp_task_wdt_reset();
         vTaskDelay(500 / portTICK_PERIOD_MS);     // Pausa más larga
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 

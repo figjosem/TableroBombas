@@ -161,7 +161,7 @@ if (command == "/presion") {
           guardarConfiguracion();   // Persistencia en Preferences
           
           String confirm = "✅ Presión seteada en " + String(nuevaP, 2) + " bar.\n";
-          confirm += "⚙️ Modbus bruto: " + String(valorEscribir);
+          //confirm += "⚙️ Modbus bruto: " + String(valorEscribir);
           colaMsj(chat_id, confirm);
       } else {
           colaMsj(chat_id, "❌ Error: Valor fuera de rango (0.5 - 2.0 bar).");
