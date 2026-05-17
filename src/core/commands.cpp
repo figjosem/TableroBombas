@@ -572,17 +572,12 @@ String obtenerResumenBombas() {
 
     msg += "🎯 <b>SetPoint:</b> " + String(presionSetPoint, 2) + " bar\n\n";
 
-    // === EMOJI ANIMADO MEJORADO ===
-    static unsigned long lastAnim = 0;
+        // === EMOJI ANIMADO CON BARRAS ===
     static int contador = 0;
+    contador = (contador + 1) % 4;
     
-    if (millis() - lastAnim > 800) {        // Cambia más lento para que se note
-        contador = (contador + 1) % 6;
-        lastAnim = millis();
-    }
-
-    String anim[] = {"🔄", "⭮", "⟳", "🔃", "⭯", "♻️"};
-    msg += anim[contador] + " <i>Actualizado en vivo</i>";
+    String anim[] = {"│", "╱", "─", "╲"};
+    msg += "\n" + anim[contador] + " <i>Actualizado en vivo</i>";
 
     return msg;
 }
@@ -591,42 +586,38 @@ void procesarCallbackBomba(String callbackData, String chat_id) {
     int bomba_id = 0;
     bool encender = false;
 
-    if (callbackData.startsWith("bomba1")) {
-        bomba_id = 1;
-    } else if (callbackData.startsWith("bomba2")) {
-        bomba_id = 2;
-    } else if (callbackData.startsWith("bomba3")) {
-        bomba_id = 3;
-    }
+    if (callbackData == "b1on" || callbackData == "bomba1on") bomba_id = 1;
+    else if (callbackData == "b1off" || callbackData == "bomba1off") bomba_id = 1;
+    else if (callbackData == "b2on" || callbackData == "bomba2on") bomba_id = 2;
+    else if (callbackData == "b2off" || callbackData == "bomba2off") bomba_id = 2;
+    else if (callbackData == "b3on" || callbackData == "bomba3on") bomba_id = 3;
+    else if (callbackData == "b3off" || callbackData == "bomba3off") bomba_id = 3;
 
     if (bomba_id == 0) return;
 
-    if (callbackData.endsWith("on")) {
-        encender = true;
-    }
+    if (callbackData.endsWith("on")) encender = true;
 
     int idx = bomba_id - 1;
 
     if (!bombas[idx].enc) {
-        colaMsj(chat_id, "⚠️ Bomba " + String(bomba_id) + " no comunicada.");
+        colaMsj(chat_id, "⚠️ Variador " + String(bomba_id) + " no responde.");
         return;
     }
 
     if (encender) {
         if (!Fok) {
-            colaMsj(chat_id, "❌ No se puede encender: Nivel de agua bajo (Fok = OFF)");
+            colaMsj(chat_id, "❌ No se puede encender: Flotante OK = OFF");
             return;
         }
         bombas[idx].autom = false;
         bombas[idx].marcha = true;
         colaMb(bomba_id, 8192, "esp32", 1, false, nullptr);
-        colaMsj(chat_id, "✅ Bomba " + String(bomba_id) + " encendida manualmente.");
-    } 
-    else {
+        colaMsj(chat_id, "✅ Bomba " + String(bomba_id) + " → ON");
+    } else {
         bombas[idx].autom = false;
         bombas[idx].marcha = false;
         if (idx == bombaActiva) bombaActiva = -1;
-        colaMb(bomba_id, 8192, "esp32", 6, false, nullptr);  // 6 = parada
-        colaMsj(chat_id, "🛑 Bomba " + String(bomba_id) + " detenida.");
+        colaMb(bomba_id, 8192, "esp32", 6, false, nullptr);
+        colaMsj(chat_id, "🛑 Bomba " + String(bomba_id) + " → OFF");
     }
 }
