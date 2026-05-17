@@ -12,7 +12,7 @@
 
 
 void tareaTelegram(void *pvParameters) {
-    Serial.println("→ Tarea Telegram (Core 0) iniciada");
+    //Serial.println("→ Tarea Telegram (Core 0) iniciada");
     
     while (true) {
         if (WiFi.status() == WL_CONNECTED) {
@@ -20,18 +20,18 @@ void tareaTelegram(void *pvParameters) {
             // === AUTO ACTUALIZACIÓN DE /bombas ===
             static unsigned long lastBombasCheck = 0;
             if (bombasChatId.length() > 0 && lastBombasMessageId != 0) {
-                if (millis() - lastBombasCheck >= 7000) {        // Cada 7 segundos
+                if (millis() - lastBombasCheck >= 7000) {   // Cada 7 segundos
                     String texto = obtenerResumenBombas();
                     if (telegramEditarMensaje(bombasChatId, lastBombasMessageId, texto)) {
                         lastBombasUpdate = millis();
                     } else {
                         static int fallos = 0;
                         fallos++;
-                        if (fallos >= 5) {                    // 5 fallos seguidos
+                        if (fallos >= 5) {
                             bombasChatId = "";
                             lastBombasMessageId = 0;
                             fallos = 0;
-                            Serial.println("❌ Auto-actualización de /bombas desactivada por fallos");
+                            //Serial.println("❌ Auto-actualización /bombas desactivada por fallos");
                         }
                     }
                     lastBombasCheck = millis();
@@ -43,18 +43,19 @@ void tareaTelegram(void *pvParameters) {
             enviarHeartbeatHC();
         } 
         else {
-            // Si no hay WiFi, limpiamos el auto-update
             if (bombasChatId.length() > 0) {
                 bombasChatId = "";
                 lastBombasMessageId = 0;
             }
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            vTaskDelay(1500 / portTICK_PERIOD_MS);
         }
 
         esp_task_wdt_reset(); 
-        vTaskDelay(400 / portTICK_PERIOD_MS);   // Un poco más fluido
+        vTaskDelay(400 / portTICK_PERIOD_MS);
     }
 }
+
+
 
 void tareaModbusBombas(void *pvParameters) {
     // 1. Declarar las variables estáticas AQUÍ, antes del while

@@ -53,20 +53,15 @@ if (command == "/version") {
       colaMsj(chat_id, respuesta);
   }
 
-  if (command == "/bombas") {
+if (command == "/bombas") {
     String texto = obtenerResumenBombas();
     
-    // Si ya hay un mensaje activo en este chat, lo editamos
-    if (bombasChatId == chat_id && lastBombasMessageId != 0) {
-        telegramEditarMensaje(chat_id, lastBombasMessageId, texto);
+    // Siempre enviamos un mensaje nuevo (más simple y confiable por ahora)
+    if (telegramEnviarDirecto(chat_id, texto)) {
+        colaMsj(chat_id, "✅ Mensaje de bombas enviado.\n\nUsá /bombas de nuevo para actualizar.");
     } else {
-        // Primer mensaje
-        if (telegramEnviarConID(chat_id, texto, lastBombasMessageId)) {
-            bombasChatId = chat_id;
-        }
+        colaMsj(chat_id, "❌ Error al enviar estado de bombas.");
     }
-    
-    lastBombasUpdate = millis();
     return;
 }
 
@@ -515,6 +510,7 @@ void cargarConfiguracion() {
     prefs.end();
 }
 
+
 String obtenerResumenBombas() {
     String msg = "🚀 *ESTADO GENERAL DE BOMBAS*\n";
     msg += "============================\n\n";
@@ -532,7 +528,7 @@ String obtenerResumenBombas() {
         } else if (bombas[i].autom) {
             control = "AUTO 🤖";
         } else {
-            control = "MANUAL " + String(bombas[i].marcha ? "(ON 🕹️)" : "(OFF 🛑)");
+            control = bombas[i].marcha ? "MANUAL \\(ON 🕹️\\)" : "MANUAL \\(OFF 🛑\\)";
         }
         msg += "• Control: " + control + "\n";
 
@@ -559,7 +555,7 @@ String obtenerResumenBombas() {
         float promedio = sumaPresiones / bombasContadas;
         msg += "📊 *Presión:* " + String(promedio, 2) + " bar\n\n";
     } else {
-        msg += "📊 *Presión:* (Sin datos)\n\n";
+        msg += "📊 *Presión:* \\(Sin datos\\)\n\n";
     }
 
     msg += "🎯 *SetPoint:* " + String(presionSetPoint, 2) + " bar";
