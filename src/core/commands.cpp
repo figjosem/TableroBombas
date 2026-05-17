@@ -516,7 +516,7 @@ void cargarConfiguracion() {
 }
 
 String obtenerResumenBombas() {
-    String msg = "🚀 <b>ESTADO GENERAL DE BOMBAS</b>\n";
+    String msg = "🚀 *ESTADO GENERAL DE BOMBAS*\n";
     msg += "============================\n\n";
 
     float sumaPresiones = 0;
@@ -524,9 +524,8 @@ String obtenerResumenBombas() {
 
     for (int i = 0; i < 3; i++) {
         int num = i + 1;
-        msg += "<b>Bomba " + String(num) + "</b>\n";
+        msg += "*Bomba " + String(num) + "*\n";
 
-        // Control
         String control;
         if (bombas[i].modoTablero) {
             control = "TABLERO 🏗️";
@@ -537,20 +536,16 @@ String obtenerResumenBombas() {
         }
         msg += "• Control: " + control + "\n";
 
-        // Marcha real
         msg += "• Marcha: " + String(bombas[i].marchaReal ? "EN MARCHA 🟢" : "PARADA ⚪") + "\n";
 
-        // Conexión - Solo si falla
         if (!bombas[i].enc) {
             msg += "• Conexión: ❌ FALLA MODBUS ⚠️\n";
         }
 
-        // Velocidad - Solo si está en marcha
         if (bombas[i].marchaReal && bombas[i].enc) {
             msg += "• Velocidad: " + String(bombas[i].vel / 50.0, 1) + " %\n";
         }
 
-        // Acumular presión para promedio (aunque no la mostramos por bomba)
         if (bombas[i].presion > 0 && bombas[i].enc) {
             float p = (bombas[i].presion - 200.0) * 1.25 / 100.0;
             sumaPresiones += p;
@@ -560,15 +555,14 @@ String obtenerResumenBombas() {
         msg += "\n";
     }
 
-    // === Promedio de presión (solo al final) ===
     if (bombasContadas > 0) {
         float promedio = sumaPresiones / bombasContadas;
-        msg += "📊 <b>Presión:</b> " + String(promedio, 2) + " bar\n\n";
+        msg += "📊 *Presión:* " + String(promedio, 2) + " bar\n\n";
     } else {
-        msg += "📊 <b>Presión: </b>(Sin datos)\n\n";
+        msg += "📊 *Presión:* (Sin datos)\n\n";
     }
 
-    msg += "🎯 <b>SetPoint: </b>" + String(presionSetPoint, 2) + " bar";
+    msg += "🎯 *SetPoint:* " + String(presionSetPoint, 2) + " bar";
 
     return msg;
 }
