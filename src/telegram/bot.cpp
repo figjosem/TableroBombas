@@ -197,10 +197,19 @@ bool telegramEnviarDirecto(String chat_id, String texto) {
 }
 
 bool telegramEnviarConID(String chat_id, String texto, unsigned long &messageId) {
+    String keyboard = "%7B%22inline_keyboard%22%3A%5B"
+                      "%5B%7B%22text%22%3A%22Bomba%201%20ON%22%2C%22callback_data%22%3A%22bomba1on%22%7D%2C"
+                      "%7B%22text%22%3A%22Bomba%201%20OFF%22%2C%22callback_data%22%3A%22bomba1off%22%7D%5D%2C"
+                      "%5B%7B%22text%22%3A%22Bomba%202%20ON%22%2C%22callback_data%22%3A%22bomba2on%22%7D%2C"
+                      "%7B%22text%22%3A%22Bomba%202%20OFF%22%2C%22callback_data%22%3A%22bomba2off%22%7D%5D%2C"
+                      "%5B%7B%22text%22%3A%22Bomba%203%20ON%22%2C%22callback_data%22%3A%22bomba3on%22%7D%2C"
+                      "%7B%22text%22%3A%22Bomba%203%20OFF%22%2C%22callback_data%22%3A%22bomba3off%22%7D%5D%5D%7D";
+
     String url = "https://api.telegram.org/bot" + String(BOTtoken) + 
                  "/sendMessage?chat_id=" + chat_id + 
                  "&text=" + urlencode(texto) +
-                 "&parse_mode=HTML";   // ← HTML
+                 "&parse_mode=HTML" +
+                 "&reply_markup=" + keyboard;
 
     WiFiClientSecure client;
     client.setInsecure();
@@ -225,11 +234,20 @@ bool telegramEnviarConID(String chat_id, String texto, unsigned long &messageId)
 }
 
 bool telegramEditarMensaje(String chat_id, unsigned long messageId, String nuevoTexto) {
+    String keyboard = "%7B%22inline_keyboard%22%3A%5B"
+                      "%5B%7B%22text%22%3A%22Bomba%201%20ON%22%2C%22callback_data%22%3A%22bomba1on%22%7D%2C"
+                      "%7B%22text%22%3A%22Bomba%201%20OFF%22%2C%22callback_data%22%3A%22bomba1off%22%7D%5D%2C"
+                      "%5B%7B%22text%22%3A%22Bomba%202%20ON%22%2C%22callback_data%22%3A%22bomba2on%22%7D%2C"
+                      "%7B%22text%22%3A%22Bomba%202%20OFF%22%2C%22callback_data%22%3A%22bomba2off%22%7D%5D%2C"
+                      "%5B%7B%22text%22%3A%22Bomba%203%20ON%22%2C%22callback_data%22%3A%22bomba3on%22%7D%2C"
+                      "%7B%22text%22%3A%22Bomba%203%20OFF%22%2C%22callback_data%22%3A%22bomba3off%22%7D%5D%5D%7D";
+
     String url = "https://api.telegram.org/bot" + String(BOTtoken) + 
                  "/editMessageText?chat_id=" + chat_id + 
                  "&message_id=" + String(messageId) +
                  "&text=" + urlencode(nuevoTexto) +
-                 "&parse_mode=HTML";   // ← HTML
+                 "&parse_mode=HTML" +
+                 "&reply_markup=" + keyboard;
 
     WiFiClientSecure client;
     client.setInsecure();

@@ -558,12 +558,18 @@ String obtenerResumenBombas() {
 
     if (bombasContadas > 0) {
         float promedio = sumaPresiones / bombasContadas;
-        msg += "📊 <b>Presión:</b> " + String(promedio, 2) + " bar\n\n";
+        msg += "📊 <b>Presión:</b> " + String(promedio, 2) + " bar\n";
     } else {
-        msg += "📊 <b>Presión:</b> (Sin datos)\n\n";
+        msg += "📊 <b>Presión:</b> (Sin datos)\n";
     }
 
-    msg += "🎯 <b>SetPoint:</b> " + String(presionSetPoint, 2) + " bar";
+    msg += "🎯 <b>SetPoint:</b> " + String(presionSetPoint, 2) + " bar\n\n";
+
+    // Emoji animado
+    static int contador = 0;
+    contador = (contador + 1) % 6;
+    String anim[] = {"🔄", "⭮", "⟳", "🔃", "⭯", "♻️"};
+    msg += anim[contador] + " <i>Actualizado en vivo</i>";
 
     return msg;
 }
