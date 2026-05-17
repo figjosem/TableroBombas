@@ -200,7 +200,7 @@ bool telegramEnviarConID(String chat_id, String texto, unsigned long &messageId)
     String url = "https://api.telegram.org/bot" + String(BOTtoken) + 
                  "/sendMessage?chat_id=" + chat_id + 
                  "&text=" + urlencode(texto) +
-                 "&parse_mode=MarkdownV2";   // ← Cambiado a MarkdownV2
+                 "&parse_mode=HTML";   // ← HTML
 
     WiFiClientSecure client;
     client.setInsecure();
@@ -212,7 +212,7 @@ bool telegramEnviarConID(String chat_id, String texto, unsigned long &messageId)
         int httpCode = http.GET();
         if (httpCode == 200) {
             String payload = http.getString();
-            DynamicJsonDocument doc(1024);
+            DynamicJsonDocument doc(1200);
             if (deserializeJson(doc, payload) == DeserializationError::Ok && doc["ok"]) {
                 messageId = doc["result"]["message_id"].as<unsigned long>();
                 http.end();
@@ -229,13 +229,13 @@ bool telegramEditarMensaje(String chat_id, unsigned long messageId, String nuevo
                  "/editMessageText?chat_id=" + chat_id + 
                  "&message_id=" + String(messageId) +
                  "&text=" + urlencode(nuevoTexto) +
-                 "&parse_mode=MarkdownV2";   // ← Cambiado a MarkdownV2
+                 "&parse_mode=HTML";   // ← HTML
 
     WiFiClientSecure client;
     client.setInsecure();
     HTTPClient http;
     http.setReuse(false);
-    http.setTimeout(6000);
+    http.setTimeout(7000);
 
     if (http.begin(client, url)) {
         int httpCode = http.GET();

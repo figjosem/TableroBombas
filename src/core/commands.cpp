@@ -56,12 +56,17 @@ if (command == "/version") {
 if (command == "/bombas") {
     String texto = obtenerResumenBombas();
     
-    // Siempre enviamos un mensaje nuevo (más simple y confiable por ahora)
-    if (telegramEnviarDirecto(chat_id, texto)) {
-        colaMsj(chat_id, "✅ Mensaje de bombas enviado.\n\nUsá /bombas de nuevo para actualizar.");
+    if (bombasChatId == chat_id && lastBombasMessageId != 0) {
+        telegramEditarMensaje(chat_id, lastBombasMessageId, texto);
     } else {
-        colaMsj(chat_id, "❌ Error al enviar estado de bombas.");
+        if (telegramEnviarConID(chat_id, texto, lastBombasMessageId)) {
+            bombasChatId = chat_id;
+            // Mensaje de confirmación opcional
+            colaMsj(chat_id, "✅ Auto-actualización activada (cada ~7s)");
+        }
     }
+    
+    lastBombasUpdate = millis();
     return;
 }
 
@@ -512,7 +517,7 @@ void cargarConfiguracion() {
 
 
 String obtenerResumenBombas() {
-    String msg = "🚀 *ESTADO GENERAL DE BOMBAS*\n";
+    String msg = "🚀 <b>ESTADO GENERAL DE BOMBAS</b>\n";
     msg += "============================\n\n";
 
     float sumaPresiones = 0;
@@ -520,7 +525,7 @@ String obtenerResumenBombas() {
 
     for (int i = 0; i < 3; i++) {
         int num = i + 1;
-        msg += "*Bomba " + String(num) + "*\n";
+        msg += "<b>Bomba " + String(num) + "</b>\n";
 
         String control;
         if (bombas[i].modoTablero) {
@@ -528,7 +533,7 @@ String obtenerResumenBombas() {
         } else if (bombas[i].autom) {
             control = "AUTO 🤖";
         } else {
-            control = bombas[i].marcha ? "MANUAL \\(ON 🕹️\\)" : "MANUAL \\(OFF 🛑\\)";
+            control = bombas[i].marcha ? "MANUAL (ON 🕹️)" : "MANUAL (OFF 🛑)";
         }
         msg += "• Control: " + control + "\n";
 
@@ -553,12 +558,12 @@ String obtenerResumenBombas() {
 
     if (bombasContadas > 0) {
         float promedio = sumaPresiones / bombasContadas;
-        msg += "📊 *Presión:* " + String(promedio, 2) + " bar\n\n";
+        msg += "📊 <b>Presión:</b> " + String(promedio, 2) + " bar\n\n";
     } else {
-        msg += "📊 *Presión:* \\(Sin datos\\)\n\n";
+        msg += "📊 <b>Presión:</b> (Sin datos)\n\n";
     }
 
-    msg += "🎯 *SetPoint:* " + String(presionSetPoint, 2) + " bar";
+    msg += "🎯 <b>SetPoint:</b> " + String(presionSetPoint, 2) + " bar";
 
     return msg;
 }
