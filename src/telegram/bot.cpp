@@ -195,3 +195,54 @@ bool telegramEnviarDirecto(String chat_id, String texto) {
     }
     return success;
 }
+
+// Enviar mensaje y guardar su ID
+bool telegramEnviarConID(String chat_id, String texto, unsigned long &messageId) {
+    String url = "https://api.telegram.org/bot" + String(BOTtoken) + 
+                 "/sendMessage?chat_id=" + chat_id + 
+                 "&text=" + urlencode(texto) +
+                 "&parse_mode=Markdown";
+
+    WiFiClientSecure client;
+    client.setInsecure();
+    HTTPClient http;
+    http.setReuse(false);
+    http.setTimeout(8000);
+
+    if (http.begin(client, url)) {
+        int httpCode = http.GET();
+        if (httpCode == 200) {
+            String payload = http.getString();
+            DynamicJsonDocument doc(1024);
+            deserializeJson(doc, payload);
+            
+            if (doc["ok"]) {
+                messageId = doc["result"]["message_id"].as<unsigned long>();
+                return true;
+            }
+        }
+        http.end();
+    }
+    return false;
+}
+
+// Editar mensaje existente
+bool telegramEditarMensaje(String chat_id, unsigned long messageId, String nuevoTexto) {
+    String url = "https://api.telegram.org/bot" + String(BOTtoken) + 
+                 "/editMessageText?chat_id=" + chat_id + 
+                 "&message_id=" + String(messageId) +
+                 "&text=" + urlencode(nuevoTexto) +
+                 "&parse_mode=Markdown";
+
+    WiFiClientSecure client;
+    client.setInsecure();
+    HTTPClient http;
+    http.setReuse(false);
+
+    if (http.begin(client, url)) {
+        int httpCode = http.GET();
+        http.end();
+        return (httpCode == 200);
+    }
+    return false;
+}

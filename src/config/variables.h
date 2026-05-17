@@ -30,7 +30,7 @@ extern IPAddress secondaryDNS;
 extern const String BOTtoken ;
 
 // Variables generales
-#define VERSION "7.13.15"
+#define VERSION "7.13.16"
 
 #define PIN_V1 32
 
@@ -105,3 +105,8 @@ extern uint16_t entradasPLC;
 #define CLOCK_165 17
 
 extern String chatATS;
+
+// Para mensaje autoactualizable de /bombas
+extern String bombasChatId;
+extern unsigned long lastBombasMessageId;
+extern unsigned long lastBombasUpdate;

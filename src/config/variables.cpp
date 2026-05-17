@@ -40,3 +40,7 @@ uint16_t entradasPLC = 0;
 
 unsigned long tiempoFinalATS = 0;
 String chatATS = "";
+
+String bombasChatId = "";
+unsigned long lastBombasMessageId = 0;
+unsigned long lastBombasUpdate = 0;
