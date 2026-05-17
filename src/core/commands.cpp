@@ -53,6 +53,12 @@ if (command == "/version") {
       colaMsj(chat_id, respuesta);
   }
 
+  if (command == "/bombas") {
+    String resumen = obtenerResumenBombas();
+    colaMsj(chat_id, resumen);
+    return;
+}
+
   if (command == "/reset") {
     
     lastUpdateId = updateId;
@@ -71,6 +77,8 @@ if (command == "/version") {
     
     return;
   }
+
+
 if (command == "/presion") {
     float sumaPresiones = 0;
     int bombasContadas = 0;
@@ -494,4 +502,64 @@ void cargarConfiguracion() {
     presionSetPoint = prefs.getFloat("presionSet", 0.8);
     
     prefs.end();
+}
+
+String obtenerResumenBombas() {
+    String msg = "🚀 *ESTADO GENERAL DE BOMBAS*\n";
+    msg += "============================\n\n";
+
+    float sumaPresiones = 0;
+    int bombasContadas = 0;
+
+    for (int i = 0; i < 3; i++) {
+        int num = i + 1;
+        msg += "*Bomba " + String(num) + "*\n";
+
+        // Control
+        String control;
+        if (bombas[i].modoTablero) {
+            control = "TABLERO 🏗️";
+        } else if (bombas[i].autom) {
+            control = "AUTO 🤖";
+        } else {
+            control = "MANUAL " + String(bombas[i].marcha ? "(ON 🕹️)" : "(OFF 🛑)");
+        }
+        msg += "• Control: " + control + "\n";
+
+        // Marcha real
+        msg += "• Marcha: " + String(bombas[i].marchaReal ? "EN MARCHA 🟢" : "PARADA ⚪") + "\n";
+
+        // Conexión - SOLO mostrar si falla
+        if (!bombas[i].enc) {
+            msg += "• Conexión: ❌ FALLA MODBUS ⚠️\n";
+        }
+
+        // Velocidad - SOLO si está en marcha
+        if (bombas[i].marchaReal && bombas[i].enc) {
+            msg += "• Velocidad: " + String(bombas[i].vel / 50.0, 1) + " %\n";
+        }
+
+        // Presión (solo si hay lectura)
+        if (bombas[i].presion > 0) {
+            float p = (bombas[i].presion - 200.0) * 1.25 / 100.0;
+            msg += "• Presión: " + String(p, 2) + " bar\n";
+            
+            sumaPresiones += p;
+            bombasContadas++;
+        }
+
+        msg += "\n";
+    }
+
+    // Promedio de presión (igual que en /presion)
+    if (bombasContadas > 0) {
+        float promedio = sumaPresiones / bombasContadas;
+        msg += "📊 *Promedio de Presión*: " + String(promedio, 2) + " bar\n";
+    } else {
+        msg += "📊 *Promedio de Presión*: (Sin datos)\n";
+    }
+
+    msg += "\n🎯 SetPoint: " + String(presionSetPoint, 2) + " bar";
+
+    return msg;
 }
