@@ -232,7 +232,7 @@ void logicaBombas() {
     static unsigned long lastRun = 0;
     
     // === FILTRO CORRECTO: Ejecutar solo cada 15 segundos ===
-    if (millis() - lastRun < 5000) {
+    if (millis() - lastRun < 1000) {
         return;
     }
     lastRun = millis();        // ← Actualizar DESPUÉS de la comprobación

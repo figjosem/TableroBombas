@@ -20,7 +20,7 @@ void tareaTelegram(void *pvParameters) {
             // === AUTO ACTUALIZACIÓN DE /bombas ===
             static unsigned long lastBombasCheck = 0;
             if (bombasChatId.length() > 0 && lastBombasMessageId != 0) {
-                if (millis() - lastBombasCheck >= 7000) {   // Cada 7 segundos
+                if (millis() - lastBombasCheck >= 3000) {   // Cada 7 segundos
                     String texto = obtenerResumenBombas();
                     if (telegramEditarMensaje(bombasChatId, lastBombasMessageId, texto)) {
                         lastBombasUpdate = millis();
@@ -72,7 +72,7 @@ void tareaModbusBombas(void *pvParameters) {
 
         verificarTemporizacionATS(); // Chequeo constante del reloj interno
         // Lógica de bombas MUY lenta temporalmente (cada 30 segundos)
-        if (millis() - lastBombas >= 2000) {
+        if (millis() - lastBombas >= 1500) {
             leerEstadosBombas();
             logicaBombas();
             actualizarEstados();
