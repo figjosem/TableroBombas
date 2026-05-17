@@ -30,7 +30,7 @@ extern IPAddress secondaryDNS;
 extern const String BOTtoken ;
 
 // Variables generales
-#define VERSION "7.14.06"
+#define VERSION "7.14.07"
 
 #define PIN_V1 32
 
