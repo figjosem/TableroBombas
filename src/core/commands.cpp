@@ -582,42 +582,46 @@ String obtenerResumenBombas() {
     return msg;
 }
 
+
 void procesarCallbackBomba(String callbackData, String chat_id) {
     int bomba_id = 0;
     bool encender = false;
 
-    if (callbackData == "b1on" || callbackData == "bomba1on") bomba_id = 1;
-    else if (callbackData == "b1off" || callbackData == "bomba1off") bomba_id = 1;
-    else if (callbackData == "b2on" || callbackData == "bomba2on") bomba_id = 2;
-    else if (callbackData == "b2off" || callbackData == "bomba2off") bomba_id = 2;
-    else if (callbackData == "b3on" || callbackData == "bomba3on") bomba_id = 3;
-    else if (callbackData == "b3off" || callbackData == "bomba3off") bomba_id = 3;
+    callbackData.trim();
 
-    if (bomba_id == 0) return;
+    if (callbackData == "b1on" || callbackData == "bomba1on") { bomba_id = 1; encender = true; }
+    else if (callbackData == "b1off" || callbackData == "bomba1off") { bomba_id = 1; encender = false; }
+    else if (callbackData == "b2on" || callbackData == "bomba2on") { bomba_id = 2; encender = true; }
+    else if (callbackData == "b2off" || callbackData == "bomba2off") { bomba_id = 2; encender = false; }
+    else if (callbackData == "b3on" || callbackData == "bomba3on") { bomba_id = 3; encender = true; }
+    else if (callbackData == "b3off" || callbackData == "bomba3off") { bomba_id = 3; encender = false; }
 
-    if (callbackData.endsWith("on")) encender = true;
+    if (bomba_id == 0) {
+        colaMsj(chat_id, "❓ Callback desconocido: " + callbackData);
+        return;
+    }
 
     int idx = bomba_id - 1;
 
     if (!bombas[idx].enc) {
-        colaMsj(chat_id, "⚠️ Variador " + String(bomba_id) + " no responde.");
+        colaMsj(chat_id, "⚠️ Bomba " + String(bomba_id) + " sin comunicación.");
         return;
     }
 
     if (encender) {
         if (!Fok) {
-            colaMsj(chat_id, "❌ No se puede encender: Flotante OK = OFF");
+            colaMsj(chat_id, "❌ No se puede encender: Flotante bajo.");
             return;
         }
         bombas[idx].autom = false;
         bombas[idx].marcha = true;
         colaMb(bomba_id, 8192, "esp32", 1, false, nullptr);
-        colaMsj(chat_id, "✅ Bomba " + String(bomba_id) + " → ON");
+        colaMsj(chat_id, "✅ *Bomba " + String(bomba_id) + " encendida*");
     } else {
         bombas[idx].autom = false;
         bombas[idx].marcha = false;
         if (idx == bombaActiva) bombaActiva = -1;
         colaMb(bomba_id, 8192, "esp32", 6, false, nullptr);
-        colaMsj(chat_id, "🛑 Bomba " + String(bomba_id) + " → OFF");
+        colaMsj(chat_id, "🛑 *Bomba " + String(bomba_id) + " apagada*");
     }
 }

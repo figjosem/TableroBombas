@@ -142,18 +142,19 @@ void telegramLoop() {
         for (JsonObject result : results) {
             last_update_id = result["update_id"].as<long>();
 
-            // === MANEJO DE BOTONES (Callback Query) ===
+                       // === MANEJO DE BOTONES ===
             if (result.containsKey("callback_query")) {
                 JsonObject cb = result["callback_query"];
                 String data = cb["data"].as<String>();
                 String chat_id = String(cb["message"]["chat"]["id"].as<long long>());
                 
+                Serial.println("📩 Callback recibido: " + data);  // Para debug (aunque no veas serial)
+                
                 procesarCallbackBomba(data, chat_id);
                 
-                // Responder al botón para quitar el reloj de espera
+                // Responder al botón
                 String answerUrl = "https://api.telegram.org/bot" + String(BOTtoken) + 
-                                 "/answerCallbackQuery?callback_query_id=" + 
-                                 cb["id"].as<String>();
+                                 "/answerCallbackQuery?callback_query_id=" + cb["id"].as<String>();
                 httpGetTelegram(answerUrl, payload, 1);
                 continue;
             }
