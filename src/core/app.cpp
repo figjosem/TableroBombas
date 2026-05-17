@@ -20,18 +20,19 @@ void tareaTelegram(void *pvParameters) {
             // === AUTO ACTUALIZACIÓN DE /bombas ===
             static unsigned long lastBombasCheck = 0;
             if (bombasChatId.length() > 0 && lastBombasMessageId != 0) {
-                if (millis() - lastBombasCheck >= 3000) {   // Cada 7 segundos
+                if (millis() - lastBombasCheck >= 5000) {
                     String texto = obtenerResumenBombas();
+                    
                     if (telegramEditarMensaje(bombasChatId, lastBombasMessageId, texto)) {
                         lastBombasUpdate = millis();
                     } else {
                         static int fallos = 0;
                         fallos++;
-                        if (fallos >= 5) {
+                        if (fallos >= 3) {
+                            colaMsj(bombasChatId, "⚠️ Auto-actualización detenida por fallos repetidos.");
                             bombasChatId = "";
                             lastBombasMessageId = 0;
                             fallos = 0;
-                            //Serial.println("❌ Auto-actualización /bombas desactivada por fallos");
                         }
                     }
                     lastBombasCheck = millis();

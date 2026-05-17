@@ -57,12 +57,19 @@ if (command == "/bombas") {
     String texto = obtenerResumenBombas();
     
     if (bombasChatId == chat_id && lastBombasMessageId != 0) {
-        telegramEditarMensaje(chat_id, lastBombasMessageId, texto);
+        colaMsj(chat_id, "🔄 Actualizando mensaje existente...");
+        if (telegramEditarMensaje(chat_id, lastBombasMessageId, texto)) {
+            colaMsj(chat_id, "✅ Actualización exitosa.");
+        } else {
+            colaMsj(chat_id, "❌ Falló la actualización.");
+        }
     } else {
+        colaMsj(chat_id, "📤 Creando nuevo mensaje auto-actualizable...");
         if (telegramEnviarConID(chat_id, texto, lastBombasMessageId)) {
             bombasChatId = chat_id;
-            // Mensaje de confirmación opcional
-            colaMsj(chat_id, "✅ Auto-actualización activada (cada ~7s)");
+            colaMsj(chat_id, "✅ Mensaje creado. Auto-actualización activada cada ~5 segundos.");
+        } else {
+            colaMsj(chat_id, "❌ Error al crear el mensaje.");
         }
     }
     
