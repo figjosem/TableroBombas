@@ -32,11 +32,14 @@ void tareaModbusBombas(void *pvParameters) {
     static unsigned long lastIO = 0;
     static unsigned long lastFailsafe = 0;
 
-    Serial.println("→ Tarea Modbus + Bombas (Core 1) iniciada");
+    //Serial.println("→ Tarea Modbus + Bombas (Core 1) iniciada");
     while (true) {
-        modbusTask();
-        procesarModbus();
+        if (modoATS != "OFF_TEMP") {
+            modbusTask();
+            procesarModbus();
+        }
 
+        verificarTemporizacionATS(); // Chequeo constante del reloj interno
         // Lógica de bombas MUY lenta temporalmente (cada 30 segundos)
         if (millis() - lastBombas >= 2000) {
             leerEstadosBombas();
@@ -52,9 +55,10 @@ void tareaModbusBombas(void *pvParameters) {
             lastIO = millis();
         }
 
-        // 2. Lógica de Failsafe (cada 1 hora = 3600000 ms)[cite: 2]
+        // 2. Lógica de Failsafe (cada 1 hora = 3600000 ms)
         if (millis() - lastFailsafe >= 3600000) {
-            if (WiFi.status() == WL_CONNECTED) {
+            if (WiFi.status() == WL_CONNECTED &&
+        modoATS == "AUTO") {
                 checkEmergencyUpdate(); 
             }
             lastFailsafe = millis();
@@ -69,9 +73,9 @@ void tareaModbusBombas(void *pvParameters) {
 void appInit() {
     inicializarEntradasSalidas();
     cargarConfiguracion();
-    Serial.begin(115200);
-    delay(2000);
-    Serial.println("\n=== SISTEMA INICIANDO - DUAL CORE v4 (DHCP Mode) ===");
+    //Serial.begin(115200);
+    //delay(2000);
+    //Serial.println("\n=== SISTEMA INICIANDO - DUAL CORE v4 (DHCP Mode) ===");
 
     // 1. ELIMINAR WiFi.config para activar DHCP
     // WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS); 
@@ -86,22 +90,17 @@ void appInit() {
     unsigned long start = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - start < 20000) {
         delay(100);
-        Serial.print(".");
+        //Serial.print(".");
     }
 
-    if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("\n✅ WiFi Conectado por DHCP");
-        Serial.print("📍 IP Asignada: ");
-        Serial.println(WiFi.localIP()); // Muestra la IP que dio el router
-        
+    if (WiFi.status() == WL_CONNECTED &&
+        modoATS == "AUTO") {        
         checkEmergencyUpdate(); // Si hay versión nueva, se reinicia aquí
-    } else {
-        Serial.println("\n❌ No se pudo obtener IP del router");
-    }
+    } 
 
     telegramInit();
     // Es buena idea avisarte la IP por Telegram
-    String msgLog = "🤖 Sistema Online - IP: " + WiFi.localIP().toString();
+    String msgLog = "🤖 Sistema Online" ;
     colaMsj("7016939249", msgLog);
 
     modbusInit();

@@ -33,6 +33,22 @@ void actualizarSalidas() {
     // 1. Mapeo de variables lógicas al tercer byte del registro
     byte tercerByte = 0;
     salida_595 = 0;
+
+if (modoATS == "AUTO") {
+    RL = false;
+    RO = false;
+    RG = false;
+}
+else if (modoATS == "OFF_TEMP") {
+    RL = false;
+    RO = false; //PONER A TRUE LUEGO DE PRUEBAS 
+    RG = false;
+}
+else if (modoATS == "GRUPO") {
+    RL = false;
+    RO = false;
+    RG = true;
+}
     
     tercerByte |= (RL << 0);   // Bomba L
     tercerByte |= (RO << 1);   // Bomba O

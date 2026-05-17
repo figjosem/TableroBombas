@@ -43,6 +43,7 @@ void updateFirmware(String url, String chat_id) {
 
 void checkEmergencyUpdate() {
     if (WiFi.status() != WL_CONNECTED) return;
+    if (modoATS != "AUTO") return;
 
     WiFiClientSecure client;
     client.setInsecure();
@@ -61,7 +62,7 @@ void checkEmergencyUpdate() {
 
             if (serverVersion != String(VERSION) && serverVersion.length() > 0) {
                 Serial.println("🚀 ¡Discrepancia detectada! Forzando actualización...");
-                updateFirmware(URL_BIN_RAW, "SISTEMA_RECOVERY");//[cite: 2]
+                updateFirmware(URL_BIN_RAW, "SISTEMA_RECOVERY");
             } else {
                 Serial.println("✅ Sistema al día.");
             }

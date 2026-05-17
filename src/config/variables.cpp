@@ -20,7 +20,7 @@ bool restart = false;
 //WiFiClientSecure client;   // si no lo tienes en otro módulo
 
 uint16_t param = 0;
-String modoATS = "Auto";
+String modoATS = "AUTO";
 int CicloATS = 0;
 int cicloGrupo = 10;
 uint32_t lastUpdateId = 0;
@@ -37,3 +37,6 @@ int B = 1;
 uint16_t mbBuffer[3] = {0, 0, 0};
 
 uint16_t entradasPLC = 0;
+
+unsigned long tiempoFinalATS = 0;
+String chatATS = "";

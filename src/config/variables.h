@@ -49,6 +49,7 @@ extern bool updatedRecently;
 extern bool restart;
 //extern WiFiClientSecure client;   // si usas client global en updateFirmware
 
+extern unsigned long tiempoFinalATS;
 
 
 //<<<<extern std::queue<MensajeTelegram> colaMensajes;
@@ -102,3 +103,5 @@ extern uint16_t entradasPLC;
 #define DATA_165 5
 #define LOAD_165 16
 #define CLOCK_165 17
+
+extern String chatATS;

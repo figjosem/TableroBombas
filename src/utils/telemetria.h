@@ -8,5 +8,6 @@
  * Esta función debe llamarse frecuentemente; gestiona su propio temporizador interno.
  */
 void enviarHeartbeatHC();
+void verificarTemporizacionATS();
 
 #endif

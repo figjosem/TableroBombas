@@ -152,8 +152,8 @@ if (command == "/presion") {
           // Se asume que escribís a todas las bombas que estén comunicadas
           for (int i = 0; i < 3; i++) {
               if (bombas[i].enc) {
-                  colaMb(i + 1, 62738, "esp32", (valorEscribir - 6), false, nullptr);
-                  colaMb(i + 1, 62740, "esp32", (valorEscribir + 14), false, nullptr);
+                  colaMb(i + 1, 62738, "esp32", (valorEscribir - 5), false, nullptr);
+                  colaMb(i + 1, 62740, "esp32", (valorEscribir + 15), false, nullptr);
               }
           }
 
@@ -227,8 +227,9 @@ void processModoATSCommand(String argument, String chat_id) {
     argument.toLowerCase();
     
     // Reset de salidas de control ATS antes de aplicar el nuevo modo
-    RL = false; RG = false; RO = false;
-
+    //RL = false; RG = false; RO = false;
+    chatATS = chat_id;
+    
     if (argument == "auto") {
         modoATS = "AUTO";
         // En AUTO, todas las salidas de control manual van a LOW
@@ -236,17 +237,37 @@ void processModoATSCommand(String argument, String chat_id) {
         colaMsj(chat_id, "ATS: Modo AUTOMÁTICO habilitado 🤖");
     } 
     else if (argument == "grupo") {
-        modoATS = "GRUPO (MANUAL)";
-        RG = true; 
+        modoATS = "GRUPO";
+        //RG = true; 
         actualizarSalidas();
         colaMsj(chat_id, "ATS: Forzando cambio a GRUPO ⚡");
     } 
-    else if (argument == "off") {
-        modoATS = "OFF (DESCONECTADO)";
-        RO = true;
-        actualizarSalidas();
-        colaMsj(chat_id, "ATS: Sistema DESCONECTADO (Posición 0) 🛑");
+    else // Dentro de processModoATSCommand en commands.cpp
+
+if (argument.startsWith("off")) {
+    String tiempoStr = argument.substring(3);
+    tiempoStr.trim();
+    long tiempoMs = 0;
+
+    if (tiempoStr.endsWith("h")) {
+        tiempoMs = tiempoStr.substring(0, tiempoStr.length() - 1).toInt() * 3600000;
+    } else if (tiempoStr.endsWith("m")) {
+        tiempoMs = tiempoStr.substring(0, tiempoStr.length() - 1).toInt() * 60000;
+    } else {
+        // SI NO ESPECIFICA TIEMPO: Forzamos 1 hora por seguridad
+        tiempoMs = 3600000; 
+        tiempoStr = "1h (por defecto)";
     }
+
+    modoATS = "OFF_TEMP";
+    tiempoFinalATS = millis() + tiempoMs;
+    
+    //RO = false; RL = false; RG = false;
+    actualizarSalidas();
+    // No llamamos a guardarConfiguracion() para que al resetear vuelva a AUTO 
+    
+    colaMsj(chat_id, "🛑 ATS en CERO por " + tiempoStr);
+}
     
     else if (argument == "estado") {
         String st = "📊 *ESTADO ATS*\n";
@@ -304,16 +325,16 @@ void processBombaCommand(String argument, String chat_id) {
     } 
     // 3. Ejecutamos encendido manual si todo está OK
     else {
-        bombas[idx].autom = false; // Bloqueamos el automatismo[cite: 1]
+        bombas[idx].autom = false; // Bloqueamos el automatismo
         bombas[idx].marcha = true;
         
         // Comando Modbus de ESCRITURA inmediato (Registro 8192, Valor 1)
-        colaMb(bomba_id, 8192, "esp32", 1, false, nullptr);//[cite: 1]
+        colaMb(bomba_id, 8192, "esp32", 1, false, nullptr);
         
         mensaje = "Bomba " + nroStr + " en MANUAL: Iniciando marcha... ✅";
     }
     
-    colaMsj(chat_id, mensaje);//[cite: 1]
+    colaMsj(chat_id, mensaje);
 }
 
   else if (comStr == "off") {
@@ -468,6 +489,7 @@ void cargarConfiguracion() {
         bombas[i].horas = prefs.getUInt(p_horas.c_str(), 0); // Cargamos horas de cada una
     }
 
+    chatATS = prefs.getString("chatATS", "");
     modoATS = "AUTO"; 
     presionSetPoint = prefs.getFloat("presionSet", 0.8);
     
