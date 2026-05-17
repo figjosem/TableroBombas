@@ -41,13 +41,13 @@ if (modoATS == "AUTO") {
 }
 else if (modoATS == "OFF_TEMP") {
     RL = false;
-    RO = false; //PONER A TRUE LUEGO DE PRUEBAS 
+    RO = true; //PONER A TRUE LUEGO DE PRUEBAS 
     RG = false;
 }
 else if (modoATS == "GRUPO") {
     RL = false;
     RO = false;
-    RG = true;
+    RG = false;
 }
     
     tercerByte |= (RL << 0);   // Bomba L

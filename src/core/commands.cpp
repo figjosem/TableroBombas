@@ -529,21 +529,19 @@ String obtenerResumenBombas() {
         // Marcha real
         msg += "• Marcha: " + String(bombas[i].marchaReal ? "EN MARCHA 🟢" : "PARADA ⚪") + "\n";
 
-        // Conexión - SOLO mostrar si falla
+        // Conexión - Solo si falla
         if (!bombas[i].enc) {
             msg += "• Conexión: ❌ FALLA MODBUS ⚠️\n";
         }
 
-        // Velocidad - SOLO si está en marcha
+        // Velocidad - Solo si está en marcha
         if (bombas[i].marchaReal && bombas[i].enc) {
             msg += "• Velocidad: " + String(bombas[i].vel / 50.0, 1) + " %\n";
         }
 
-        // Presión (solo si hay lectura)
-        if (bombas[i].presion > 0) {
+        // Acumular presión para promedio (aunque no la mostramos por bomba)
+        if (bombas[i].presion > 0 && bombas[i].enc) {
             float p = (bombas[i].presion - 200.0) * 1.25 / 100.0;
-            msg += "• Presión: " + String(p, 2) + " bar\n";
-            
             sumaPresiones += p;
             bombasContadas++;
         }
@@ -551,15 +549,15 @@ String obtenerResumenBombas() {
         msg += "\n";
     }
 
-    // Promedio de presión (igual que en /presion)
+    // === Promedio de presión (solo al final) ===
     if (bombasContadas > 0) {
         float promedio = sumaPresiones / bombasContadas;
-        msg += "📊 *Promedio de Presión*: " + String(promedio, 2) + " bar\n";
+        msg += "📊 *Promedio de Presión*: " + String(promedio, 2) + " bar\n\n";
     } else {
-        msg += "📊 *Promedio de Presión*: (Sin datos)\n";
+        msg += "📊 *Promedio de Presión*: (Sin datos)\n\n";
     }
 
-    msg += "\n🎯 SetPoint: " + String(presionSetPoint, 2) + " bar";
+    msg += "🎯 *SetPoint*: " + String(presionSetPoint, 2) + " bar";
 
     return msg;
 }
