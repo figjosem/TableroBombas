@@ -131,19 +131,34 @@ void telegramLoop() {
                  "&limit=1&timeout=5";
 
     if (httpGetTelegram(url, payload)) {
-        // Usamos un tamaño fijo para evitar fragmentar el heap[cite: 7]
-        StaticJsonDocument<1536> doc; 
+        StaticJsonDocument<1536> doc;
         DeserializationError error = deserializeJson(doc, payload);
         
-        if (error) return; 
+        if (error) return;
 
-        // Verificación jerárquica de existencia antes de acceder[cite: 7]
         if (!doc.containsKey("result") || !doc["result"].is<JsonArray>()) return;
 
         JsonArray results = doc["result"].as<JsonArray>();
         for (JsonObject result : results) {
             last_update_id = result["update_id"].as<long>();
-            
+
+            // === MANEJO DE BOTONES (Callback Query) ===
+            if (result.containsKey("callback_query")) {
+                JsonObject cb = result["callback_query"];
+                String data = cb["data"].as<String>();
+                String chat_id = String(cb["message"]["chat"]["id"].as<long long>());
+                
+                procesarCallbackBomba(data, chat_id);
+                
+                // Responder al botón para quitar el reloj de espera
+                String answerUrl = "https://api.telegram.org/bot" + String(BOTtoken) + 
+                                 "/answerCallbackQuery?callback_query_id=" + 
+                                 cb["id"].as<String>();
+                httpGetTelegram(answerUrl, payload, 1);
+                continue;
+            }
+
+            // Manejo normal de comandos de texto
             if (result.containsKey("message")) {
                 JsonObject msg = result["message"];
                 if (msg.containsKey("text") && msg.containsKey("chat")) {
@@ -151,7 +166,7 @@ void telegramLoop() {
                     String text = msg["text"].as<String>();
                     
                     if (text.length() > 0) {
-                        processCommand(text, chat_id);//[cite: 5]
+                        processCommand(text, chat_id);
                     }
                 }
             }
@@ -234,20 +249,11 @@ bool telegramEnviarConID(String chat_id, String texto, unsigned long &messageId)
 }
 
 bool telegramEditarMensaje(String chat_id, unsigned long messageId, String nuevoTexto) {
-    String keyboard = "%7B%22inline_keyboard%22%3A%5B"
-                      "%5B%7B%22text%22%3A%22Bomba%201%20ON%22%2C%22callback_data%22%3A%22bomba1on%22%7D%2C"
-                      "%7B%22text%22%3A%22Bomba%201%20OFF%22%2C%22callback_data%22%3A%22bomba1off%22%7D%5D%2C"
-                      "%5B%7B%22text%22%3A%22Bomba%202%20ON%22%2C%22callback_data%22%3A%22bomba2on%22%7D%2C"
-                      "%7B%22text%22%3A%22Bomba%202%20OFF%22%2C%22callback_data%22%3A%22bomba2off%22%7D%5D%2C"
-                      "%5B%7B%22text%22%3A%22Bomba%203%20ON%22%2C%22callback_data%22%3A%22bomba3on%22%7D%2C"
-                      "%7B%22text%22%3A%22Bomba%203%20OFF%22%2C%22callback_data%22%3A%22bomba3off%22%7D%5D%5D%7D";
-
     String url = "https://api.telegram.org/bot" + String(BOTtoken) + 
                  "/editMessageText?chat_id=" + chat_id + 
                  "&message_id=" + String(messageId) +
                  "&text=" + urlencode(nuevoTexto) +
-                 "&parse_mode=HTML" +
-                 "&reply_markup=" + keyboard;
+                 "&parse_mode=HTML";   // ← HTML
 
     WiFiClientSecure client;
     client.setInsecure();

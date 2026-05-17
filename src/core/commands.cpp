@@ -565,11 +565,61 @@ String obtenerResumenBombas() {
 
     msg += "🎯 <b>SetPoint:</b> " + String(presionSetPoint, 2) + " bar\n\n";
 
-    // Emoji animado
+    // === EMOJI ANIMADO MEJORADO ===
+    static unsigned long lastAnim = 0;
     static int contador = 0;
-    contador = (contador + 1) % 6;
+    
+    if (millis() - lastAnim > 800) {        // Cambia más lento para que se note
+        contador = (contador + 1) % 6;
+        lastAnim = millis();
+    }
+
     String anim[] = {"🔄", "⭮", "⟳", "🔃", "⭯", "♻️"};
     msg += anim[contador] + " <i>Actualizado en vivo</i>";
 
     return msg;
+}
+
+void procesarCallbackBomba(String callbackData, String chat_id) {
+    int bomba_id = 0;
+    bool encender = false;
+
+    if (callbackData.startsWith("bomba1")) {
+        bomba_id = 1;
+    } else if (callbackData.startsWith("bomba2")) {
+        bomba_id = 2;
+    } else if (callbackData.startsWith("bomba3")) {
+        bomba_id = 3;
+    }
+
+    if (bomba_id == 0) return;
+
+    if (callbackData.endsWith("on")) {
+        encender = true;
+    }
+
+    int idx = bomba_id - 1;
+
+    if (!bombas[idx].enc) {
+        colaMsj(chat_id, "⚠️ Bomba " + String(bomba_id) + " no comunicada.");
+        return;
+    }
+
+    if (encender) {
+        if (!Fok) {
+            colaMsj(chat_id, "❌ No se puede encender: Nivel de agua bajo (Fok = OFF)");
+            return;
+        }
+        bombas[idx].autom = false;
+        bombas[idx].marcha = true;
+        colaMb(bomba_id, 8192, "esp32", 1, false, nullptr);
+        colaMsj(chat_id, "✅ Bomba " + String(bomba_id) + " encendida manualmente.");
+    } 
+    else {
+        bombas[idx].autom = false;
+        bombas[idx].marcha = false;
+        if (idx == bombaActiva) bombaActiva = -1;
+        colaMb(bomba_id, 8192, "esp32", 6, false, nullptr);  // 6 = parada
+        colaMsj(chat_id, "🛑 Bomba " + String(bomba_id) + " detenida.");
+    }
 }

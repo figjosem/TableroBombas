@@ -13,5 +13,7 @@ String urlencode(String str);
 // Funciones para mensaje autoactualizable de /bombas
 bool telegramEnviarConID(String chat_id, String texto, unsigned long &messageId);
 bool telegramEditarMensaje(String chat_id, unsigned long messageId, String nuevoTexto);
+// Procesamiento de botones inline
+void procesarCallbackBomba(String callbackData, String chat_id);
 
 #endif
