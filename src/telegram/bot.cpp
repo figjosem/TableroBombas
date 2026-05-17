@@ -211,22 +211,11 @@ bool telegramEnviarDirecto(String chat_id, String texto) {
     return success;
 }
 
-
 bool telegramEnviarConID(String chat_id, String texto, unsigned long &messageId) {
-    // Keyboard más simple y corto
-    String keyboard = "%7B%22inline_keyboard%22%3A%5B"
-                      "%5B%7B%22text%22%3A%22%F0%9F%9F%A2%201%20ON%22%2C%22callback_data%22%3A%22b1on%22%7D%2C"
-                      "%7B%22text%22%3A%22%F0%9F%94%B4%201%20OFF%22%2C%22callback_data%22%3A%22b1off%22%7D%5D%2C"
-                      "%5B%7B%22text%22%3A%22%F0%9F%9F%A2%202%20ON%22%2C%22callback_data%22%3A%22b2on%22%7D%2C"
-                      "%7B%22text%22%3A%22%F0%9F%94%B4%202%20OFF%22%2C%22callback_data%22%3A%22b2off%22%7D%5D%2C"
-                      "%5B%7B%22text%22%3A%22%F0%9F%9F%A2%203%20ON%22%2C%22callback_data%22%3A%22b3on%22%7D%2C"
-                      "%7B%22text%22%3A%22%F0%9F%94%B4%203%20OFF%22%2C%22callback_data%22%3A%22b3off%22%7D%5D%5D%7D";
-
     String url = "https://api.telegram.org/bot" + String(BOTtoken) + 
                  "/sendMessage?chat_id=" + chat_id + 
                  "&text=" + urlencode(texto) +
-                 "&parse_mode=HTML" +
-                 "&reply_markup=" + keyboard;
+                 "&parse_mode=HTML";
 
     WiFiClientSecure client;
     client.setInsecure();
